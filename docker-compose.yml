@@ -37,6 +37,7 @@ services:
       REDIS_URL: redis://redis:6379/0
     volumes:
       - playwright_cache:/root/.cache/ms-playwright
+      - ./data:/data
     depends_on:
       database:
         condition: service_healthy

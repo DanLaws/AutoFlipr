@@ -13,7 +13,7 @@ const SORT_OPTIONS = [
 const SOURCES = [
   { value: "autotrader", label: "AutoTrader" },
   { value: "gumtree",    label: "Gumtree" },
-  { value: "fb",         label: "Facebook Marketplace", disabled: true },
+  { value: "fb",         label: "Facebook Marketplace" },
 ];
 
 interface Props {
@@ -128,19 +128,14 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
             <p className="label-caps mb-3">Sources</p>
             <div className="space-y-2">
               {SOURCES.map((src) => (
-                <label
-                  key={src.value}
-                  className={`flex items-center gap-3 ${src.disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
-                >
+                <label key={src.value} className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={activeSources.includes(src.value)}
-                    disabled={src.disabled}
-                    onChange={() => !src.disabled && toggleSource(src.value)}
+                    onChange={() => toggleSource(src.value)}
                     className="w-4 h-4 rounded border-border-strong accent-[var(--color-brand)]"
                   />
                   <span className="text-sm text-text-secondary">{src.label}</span>
-                  {src.disabled && <span className="text-xs text-text-faint ml-auto">Soon</span>}
                 </label>
               ))}
             </div>

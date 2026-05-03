@@ -1,4 +1,4 @@
-# Carflip
+# AutoFlipr
 
 AI-powered UK car deal finder — scrapes AutoTrader, Gumtree & Facebook Marketplace, scores listings against live comparables, and surfaces underpriced cars in a ranked dashboard.
 

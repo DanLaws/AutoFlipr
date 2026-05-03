@@ -1,6 +1,6 @@
 # AutoFlipr
 
-AI-powered UK car deal finder — scrapes AutoTrader, Gumtree & Facebook Marketplace, scores listings against live comparables, and surfaces underpriced cars in a ranked dashboard.
+AI-powered UK car deal finder. AutoFlipr scrapes AutoTrader, Gumtree & Facebook Marketplace, scores listings against live comparables, and surfaces underpriced cars in a ranked dashboard.
 
 ![Stack](https://img.shields.io/badge/stack-FastAPI_·_React_·_Celery_·_Gemini-black)
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -9,14 +9,26 @@ AI-powered UK car deal finder — scrapes AutoTrader, Gumtree & Facebook Marketp
 
 ## What it does
 
-Carflip runs continuously in the background, scraping UK car listings and ranking them by how underpriced they are relative to the current market.
+AutoFlipr runs continuously as a hosted service, scraping UK car listings and ranking them by how underpriced they are relative to the current market.
 
 - **Scrapes** AutoTrader, Gumtree, and Facebook Marketplace on a schedule
 - **Extracts** structured data (make, model, year, mileage, price, location) from raw listing HTML using Gemini AI
-- **Scores** each listing with a Z-score engine against recent comparable sales — higher score = better deal
+- **Scores** each listing with a Z-score engine against recent comparable sales (higher score = better deal)
 - **Analyses** listing quality: red flags, condition notes, and positives via a second LLM pass
 - **Checks** MOT history via the DVSA API and factors it into the score
 - **Surfaces** results in a ranked, filterable React dashboard with distance filtering, watchlist, and price history
+
+---
+
+## Pricing
+
+| Plan | Price | Scans |
+|---|---|---|
+| Free | £0 | 5 URL scans / month |
+| Basic | £4.99 / mo | 50 URL scans / month |
+| Pro | £14.99 / mo | Unlimited + automated discovery |
+
+Annual plans available at ~17% discount. Payments via Stripe.
 
 ---
 
@@ -55,24 +67,21 @@ User-submitted scan (POST /api/scan)
 
 ---
 
-## Getting started
+## Deploying
 
 ### Prerequisites
 
 - Docker + Docker Compose
 - A [Google AI Studio](https://aistudio.google.com/app/apikey) API key (free tier works)
-- Optionally: [DVSA MOT API](https://developer-portal.driver-vehicle-licensing.api.gov.uk/) credentials for MOT history
+- A [Stripe](https://dashboard.stripe.com/apikeys) account with products created for each plan
+- Optionally: [DVSA MOT API](https://developer-portal.driver-vehicle-licensing.api.gov.uk/) credentials
 
 ### Setup
 
 ```bash
-# 1. Clone
-git clone https://github.com/yourusername/carflip.git
-cd carflip
-
-# 2. Create your .env from the example
+# 1. Create your .env from the example
 cp .env.example .env
-# Edit .env — at minimum set GEMINI_API_KEY and a strong JWT_SECRET
+# Edit .env — set GEMINI_API_KEY, JWT_SECRET, STRIPE_* keys, POSTGRES_PASSWORD
 
 # 3. Build and start
 docker compose up -d --build
@@ -82,8 +91,6 @@ docker compose exec backend uv run alembic upgrade head
 ```
 
 The UI is available at `http://localhost` (nginx) or `http://localhost:8000` (API direct).
-
-Default admin credentials are set via `AUTH_USER` / `AUTH_PASS` in `.env`.
 
 ---
 
@@ -97,6 +104,10 @@ All configuration is via environment variables. Copy `.env.example` to `.env` an
 | `JWT_SECRET` | ✅ | Random secret for signing user JWTs |
 | `POSTGRES_PASSWORD` | ✅ | Database password |
 | `AUTH_USER` / `AUTH_PASS` | ✅ | Admin panel HTTP Basic credentials |
+| `STRIPE_SECRET_KEY` | ✅ | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe webhook signing secret |
+| `STRIPE_PRICE_BASIC_MONTHLY` | ✅ | Stripe price ID for Basic monthly |
+| `STRIPE_PRICE_PRO_MONTHLY` | ✅ | Stripe price ID for Pro monthly |
 | `DVSA_CLIENT_ID/SECRET` | Optional | Enables MOT history checks |
 | `AUTOTRADER_SEARCH_POSTCODE` | Optional | Centre point for AutoTrader search |
 | `FB_COOKIES_PATH` | Optional | Path to Facebook session cookies file |
@@ -167,6 +178,8 @@ docker compose logs -f backend
 | `GET` | `/api/listings/pipeline/stats` | Pipeline health |
 | `POST` | `/api/auth/register` | Create account |
 | `POST` | `/api/auth/login` | Get JWT |
+| `POST` | `/api/billing/checkout` | Create Stripe checkout session |
+| `POST` | `/api/billing/webhook` | Stripe webhook handler |
 | `GET` | `/health` | Health check |
 
 ---

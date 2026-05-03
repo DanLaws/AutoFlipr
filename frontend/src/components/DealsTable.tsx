@@ -14,35 +14,31 @@ import DealModal from "./DealModal";
 const col = createColumnHelper<Deal>();
 
 const fmt = {
-  gbp: (v: number | null) => (v != null ? `£${v.toLocaleString()}` : "—"),
-  miles: (v: number | null) => (v != null ? `${v.toLocaleString()} mi` : "—"),
-  pct: (v: number | null) =>
+  gbp:  (v: number | null) => (v != null ? `£${v.toLocaleString("en-GB")}` : "—"),
+  miles:(v: number | null) => (v != null ? `${v.toLocaleString("en-GB")} mi` : "—"),
+  pct:  (v: number | null) =>
     v != null ? (
-      <span className={v < 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
-        {v > 0 ? "+" : ""}
-        {v.toFixed(1)}%
+      <span className={`font-mono font-medium ${v < 0 ? "text-success-strong" : "text-danger-strong"}`}>
+        {v > 0 ? "+" : ""}{v.toFixed(1)}%
       </span>
-    ) : (
-      "—"
-    ),
+    ) : "—",
 };
 
 const staticColumns = [
   col.accessor("score", {
     header: "Score",
-    cell: (i) => <ScoreBadge score={i.getValue()} confidence={i.row.original.confidence} />,
+    cell: (i) => <ScoreBadge score={i.getValue()} confidence={i.row.original.confidence} size={40} />,
   }),
   col.accessor("image_urls", {
     header: "",
     enableSorting: false,
     cell: (i) => {
-      const urls = i.getValue();
-      const thumb = urls?.[0]?.replace("/w1400/", "/w200/");
+      const thumb = i.getValue()?.[0]?.replace("/w1400/", "/w200/");
       return thumb ? (
-        <img src={thumb} alt="" className="w-20 h-14 object-cover rounded-lg border border-gray-100" />
+        <img src={thumb} alt="" className="w-20 h-14 object-cover rounded-lg border border-border-default" />
       ) : (
-        <div className="w-20 h-14 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
-          <span className="text-gray-400 text-[10px]">No photo</span>
+        <div className="w-20 h-14 bg-surface-subtle rounded-lg border border-border-default flex items-center justify-center">
+          <span className="text-text-faint text-[10px]">No photo</span>
         </div>
       );
     },
@@ -54,15 +50,15 @@ const staticColumns = [
       const d = i.row.original;
       return (
         <div>
-          <span className="text-gray-900 font-semibold">{i.getValue() || "Unknown"}</span>
-          {d.variant && <div className="text-xs text-gray-500 mt-0.5">{d.variant}</div>}
+          <span className="font-semibold text-text-primary">{i.getValue() || "Unknown"}</span>
+          {d.variant && <div className="text-xs text-text-muted mt-0.5">{d.variant}</div>}
           {(d.body_type || d.colour) && (
-            <div className="text-xs text-gray-400 mt-0.5">
+            <div className="text-xs text-text-muted mt-0.5">
               {[d.colour, d.body_type].filter(Boolean).join(" · ")}
             </div>
           )}
           {(d.location || d.distance_miles != null) && (
-            <div className="text-xs text-gray-400 mt-0.5">
+            <div className="text-xs text-text-faint mt-0.5">
               {d.distance_miles != null ? `${d.distance_miles} mi away` : d.location}
             </div>
           )}
@@ -72,17 +68,16 @@ const staticColumns = [
   }),
   col.accessor("price_gbp", {
     header: "Price",
-    cell: (i) => <span className="font-medium text-gray-900">{fmt.gbp(i.getValue())}</span>,
+    cell: (i) => <span className="font-mono font-medium text-text-primary">{fmt.gbp(i.getValue())}</span>,
   }),
   col.accessor("estimated_margin_gbp", {
     header: "Margin",
     cell: (i) => {
       const v = i.getValue();
-      if (v == null) return <span className="text-gray-400">—</span>;
+      if (v == null) return <span className="text-text-faint">—</span>;
       return (
-        <span className={`font-semibold ${v > 0 ? "text-emerald-600" : "text-red-500"}`}>
-          {v > 0 ? "+" : ""}
-          {fmt.gbp(v)}
+        <span className={`font-mono font-semibold ${v > 0 ? "text-success-strong" : "text-danger-strong"}`}>
+          {v > 0 ? "+" : "−"}£{Math.abs(Math.round(v)).toLocaleString("en-GB")}
         </span>
       );
     },
@@ -93,23 +88,23 @@ const staticColumns = [
   }),
   col.accessor("mileage", {
     header: "Mileage",
-    cell: (i) => <span className="text-gray-600">{fmt.miles(i.getValue())}</span>,
+    cell: (i) => <span className="font-mono text-text-secondary">{fmt.miles(i.getValue())}</span>,
   }),
   col.accessor("seller_type", {
     header: "Seller",
-    cell: (i) => (
-      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-        i.getValue() === "private"
-          ? "bg-blue-50 text-blue-700"
-          : "bg-gray-100 text-gray-600"
-      }`}>
-        {i.getValue() ?? "—"}
-      </span>
-    ),
+    cell: (i) => {
+      const v = i.getValue();
+      if (!v) return <span className="text-text-faint">—</span>;
+      return (
+        <span className={`badge ${v === "private" ? "badge-private" : "badge-trade"}`}>
+          {v}
+        </span>
+      );
+    },
   }),
   col.accessor("source", {
     header: "Source",
-    cell: (i) => <span className="text-xs text-gray-400">{i.getValue()}</span>,
+    cell: (i) => <span className="font-mono text-xs text-text-faint">{i.getValue()}</span>,
   }),
 ];
 
@@ -136,7 +131,7 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
         cell: (i) => {
           const id = i.row.original.id;
           const isBookmarked = bookmarked?.has(id) ?? false;
-          const isHidden = hidden?.has(id) ?? false;
+          const isHidden     = hidden?.has(id)     ?? false;
           return (
             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               {onBookmark && (
@@ -145,8 +140,8 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
                   title={isBookmarked ? "Remove from watchlist" : "Add to watchlist"}
                   className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
                     isBookmarked
-                      ? "text-amber-500 hover:text-amber-600 bg-amber-50"
-                      : "text-gray-300 hover:text-amber-400 hover:bg-amber-50"
+                      ? "text-warning-strong bg-warning-bg"
+                      : "text-text-faint hover:text-warning-strong hover:bg-warning-bg"
                   }`}
                 >
                   <svg className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -160,8 +155,8 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
                   title={isHidden ? "Unhide" : "Hide from feed"}
                   className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
                     isHidden
-                      ? "text-gray-500 hover:text-gray-700 bg-gray-100"
-                      : "text-gray-300 hover:text-gray-500 hover:bg-gray-100"
+                      ? "text-text-secondary bg-surface-subtle"
+                      : "text-text-faint hover:text-text-secondary hover:bg-surface-subtle"
                   }`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -187,7 +182,7 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
 
   if (isLoading) {
     return (
-      <div className="text-center py-20 text-gray-400 text-sm animate-pulse">
+      <div className="text-center py-20 text-text-muted text-sm animate-pulse">
         Loading deals…
       </div>
     );
@@ -195,7 +190,7 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
 
   if (!data.length) {
     return (
-      <div className="text-center py-20 text-gray-400 text-sm">
+      <div className="text-center py-20 text-text-muted text-sm">
         No deals found. Try adjusting your filters or wait for the next scrape.
       </div>
     );
@@ -203,15 +198,15 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
 
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
+      <div className="overflow-x-auto rounded-xl border border-border-default">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-surface-subtle border-b border-border-default">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((h) => (
                   <th
                     key={h.id}
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer select-none hover:text-gray-900 transition-colors"
+                    className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap cursor-pointer select-none hover:text-text-primary transition-colors"
                     onClick={h.column.getToggleSortingHandler()}
                   >
                     {flexRender(h.column.columnDef.header, h.getContext())}
@@ -221,11 +216,11 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-surface divide-y divide-border-default">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                className="hover:bg-surface-subtle cursor-pointer transition-colors"
                 onClick={() => setSelected(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (
@@ -239,7 +234,7 @@ export default function DealsTable({ data, isLoading, bookmarked, hidden, onBook
         </table>
       </div>
 
-      {selected && <DealModal deal={selected} onClose={() => setSelected(null)} />}
+      {selected && <DealModal deal={selected} onClose={() => setSelected(null)} onHide={onHide} />}
     </>
   );
 }

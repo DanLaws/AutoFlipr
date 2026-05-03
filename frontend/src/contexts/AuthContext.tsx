@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 
 export type Plan = "free" | "basic" | "pro";
 
@@ -101,6 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const me = await apiGet<MeResponse>("/api/auth/me", state.token);
     persist(state.token, me);
   }, [state.token]);
+
+  useEffect(() => {
+    const handler = () => {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      setState({ token: null, user: null });
+    };
+    window.addEventListener("cf:unauthorized", handler);
+    return () => window.removeEventListener("cf:unauthorized", handler);
+  }, []);
 
   return (
     <AuthContext.Provider

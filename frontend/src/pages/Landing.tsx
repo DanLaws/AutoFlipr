@@ -1,302 +1,439 @@
+import { useEffect, useState } from "react";
+import { useTheme } from "../hooks/useTheme";
+
 interface Props {
-  onLaunch: () => void;
+  onLaunch:    () => void;
   onRegister?: () => void;
 }
 
-const FEATURES = [
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    title: "AI deal scoring",
-    desc: "Every listing gets a 0–100 score based on price vs market comparables, mileage, age, and seller type.",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-      </svg>
-    ),
-    title: "Price history tracking",
-    desc: "See how the asking price has changed over time. Spot motivated sellers before other buyers do.",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    title: "Risk analysis",
-    desc: "Gemini AI flags red flags, condition concerns, and reasons a deal could be a hidden gem — not just a number.",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-      </svg>
-    ),
-    title: "Watchlist",
-    desc: "Bookmark deals you like and hide ones you've already ruled out. Your shortlist, always one click away.",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-      </svg>
-    ),
-    title: "Smart filters",
-    desc: "Filter by make, year range, mileage, seller type, margin, and more. Sort by score, price, or margin.",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    ),
-    title: "Auto-refresh",
-    desc: "Listings are scraped and re-scored on a weekly schedule. Fresh deals surface automatically — no manual work.",
-  },
-];
+interface PreviewDeal {
+  id: number;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  mileage: number | null;
+  price_gbp: number | null;
+  score: number;
+  estimated_margin_gbp: number | null;
+  source: string;
+  image_url: string | null;
+}
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Scrape AutoTrader",
-    desc: "A Playwright scraper discovers used car listings matching your search criteria and stores the raw data.",
-  },
-  {
-    n: "02",
-    title: "Extract & analyse",
-    desc: "Gemini AI reads each listing, extracts structured data, flags risk factors, and writes a plain-English summary.",
-  },
-  {
-    n: "03",
-    title: "Score & rank",
-    desc: "A Z-score pricing engine compares each car against real market comparables and assigns a deal score.",
-  },
-];
+// ── Logo ──────────────────────────────────────────────────────────────────────
 
-const PLANS = [
-  {
-    name: "Self-hosted",
-    price: "Free",
-    sub: "forever",
-    highlight: true,
-    features: [
-      "Unlimited listings",
-      "Full AI analysis pipeline",
-      "AutoTrader scraper",
-      "Deal scoring engine",
-      "Price history tracking",
-      "Watchlist & hide",
-      "Docker Compose deploy",
-    ],
-    cta: "Launch app",
-  },
-  {
-    name: "Pro",
-    price: "Coming soon",
-    sub: "",
-    highlight: false,
-    features: [
-      "Everything in Self-hosted",
-      "Hosted — no server needed",
-      "Gumtree + Facebook scrapers",
-      "Email & push alerts",
-      "Distance filtering",
-      "Full cost breakdown",
-      "Priority support",
-    ],
-    cta: "Join waitlist",
-  },
-];
+function Logo() {
+  return (
+    <div className="inline-flex items-center gap-2.5">
+      <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+        <rect x="0.5" y="0.5" width="31" height="31" rx="7.5"
+          fill="var(--color-text-primary)" stroke="var(--color-text-primary)" />
+        <path d="M7 22 L11.5 9 H13.5 L18 22"
+          stroke="var(--color-brand-fg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M9 18 H16"
+          stroke="var(--color-brand-fg)" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M19 13 H25 M22 10 L25 13 L22 16"
+          stroke="var(--color-brand-fg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M25 19 H19 M22 22 L19 19 L22 16"
+          stroke="var(--color-brand-fg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.55" />
+      </svg>
+      <span className="font-extrabold text-[17px] tracking-tight text-text-primary">AutoFlipr</span>
+    </div>
+  );
+}
+
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  return (
+    <button
+      onClick={toggle}
+      aria-label="Toggle theme"
+      className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+    >
+      {theme === "dark" ? (
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+      ) : (
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+// ── Live deals mini-card ──────────────────────────────────────────────────────
+
+function MiniDealCard({ deal, i, onRegister }: { deal: PreviewDeal; i: number; onRegister: () => void }) {
+  const score = deal.score;
+  const ring  = score >= 70 ? "var(--color-score-good)" : score >= 50 ? "var(--color-score-fair)" : "var(--color-score-poor)";
+  const bg    = score >= 70 ? "var(--color-text-primary)" : score >= 50 ? "var(--color-score-fair)" : "var(--color-surface-subtle)";
+  const fg    = score >= 70 ? "var(--color-brand-fg)" : "#fff";
+  const size  = 36;
+  const r     = (size - 4) / 2;
+  const circ  = 2 * Math.PI * r;
+  const dash  = (score / 100) * circ;
+
+  return (
+    <div
+      onClick={onRegister}
+      className="card-hover overflow-hidden cursor-pointer"
+    >
+      <div className="relative" style={{ aspectRatio: "16 / 10", background: "var(--color-surface-subtle)" }}>
+        {deal.image_url ? (
+          <img src={deal.image_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h10l2-2z" />
+            </svg>
+          </div>
+        )}
+        {/* Score ring */}
+        <div className="absolute top-2 left-2">
+          <div style={{ width: size, height: size, position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width={size} height={size} style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+              <circle cx={size/2} cy={size/2} r={r} stroke="var(--color-border)" strokeWidth="2" fill="none" />
+              <circle cx={size/2} cy={size/2} r={r} stroke={ring} strokeWidth="2" fill="none" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
+            </svg>
+            <div style={{ width: size - 10, height: size - 10, background: bg, color: fg, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 11 }}>
+              {Math.round(score)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="p-3">
+        <div className="text-sm font-semibold text-text-primary truncate leading-tight">
+          {[deal.year, deal.make, deal.model].filter(Boolean).join(" ")}
+        </div>
+        <div className="flex items-baseline justify-between mt-1.5">
+          <span className="font-mono text-base font-bold text-text-primary">
+            {deal.price_gbp != null ? `£${deal.price_gbp.toLocaleString("en-GB")}` : "—"}
+          </span>
+          {deal.estimated_margin_gbp != null && deal.estimated_margin_gbp > 0 && (
+            <span className="font-mono text-xs font-bold text-success-strong">
+              +£{deal.estimated_margin_gbp.toLocaleString("en-GB")}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Feature card ──────────────────────────────────────────────────────────────
+
+function FeatureCard({ kicker, bigStat, title, desc }: { kicker: string; bigStat?: string; title: string; desc: string }) {
+  return (
+    <div className="card p-6">
+      <div className="label-caps mb-3">{kicker}</div>
+      {bigStat && (
+        <div className="font-mono text-4xl font-bold tracking-tight text-text-primary mb-2" style={{ letterSpacing: "-0.03em" }}>
+          {bigStat}
+        </div>
+      )}
+      <div className="text-base font-semibold text-text-primary mb-2">{title}</div>
+      <div className="text-sm text-text-muted leading-relaxed">{desc}</div>
+    </div>
+  );
+}
+
+// ── How step ──────────────────────────────────────────────────────────────────
+
+function HowStep({ n, title, desc }: { n: number; title: string; desc: string }) {
+  return (
+    <div className="flex-1 min-w-[200px]">
+      <div className="font-mono text-sm font-bold text-text-faint tracking-wider mb-3">
+        0{n} ——
+      </div>
+      <div className="text-base font-semibold text-text-primary mb-2">{title}</div>
+      <div className="text-sm text-text-muted leading-relaxed">{desc}</div>
+    </div>
+  );
+}
+
+// ── LiveDeals section ─────────────────────────────────────────────────────────
+
+function LiveDeals({ onRegister }: { onRegister: () => void }) {
+  const [deals, setDeals]   = useState<PreviewDeal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/deals/preview")
+      .then((r) => r.json())
+      .then((data) => { setDeals(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="skeleton rounded-xl" style={{ aspectRatio: "4/5" }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (!deals.length) return null;
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {deals.map((deal, i) => (
+        <MiniDealCard key={deal.id} deal={deal} i={i} onRegister={onRegister} />
+      ))}
+    </div>
+  );
+}
+
+// ── Main Landing page ─────────────────────────────────────────────────────────
 
 export default function LandingPage({ onLaunch, onRegister }: Props) {
+  const handleRegister = onRegister ?? onLaunch;
+
+  const FEATURES = [
+    { kicker: "Scoring engine", bigStat: "0–100",  title: "Z-score against real comparables",    desc: "Every listing scored against same-spec cars sold in the last 90 days. No guesswork — statistical underpricing only." },
+    { kicker: "Negotiation",    bigStat: "−14%",    title: "\"Don't exceed\" + opener cap",         desc: "Each deal includes an opening offer and a hard ceiling, calibrated to seller type and market deviation." },
+    { kicker: "On-demand",      bigStat: "< 30s",   title: "Paste any URL, instant analysis",    desc: "Scan tool accepts any AutoTrader, Gumtree or Facebook URL. Score, AI red flags, and margin estimate in under a minute." },
+    { kicker: "Coverage",       bigStat: "3 / 3",   title: "The platforms that actually matter", desc: "AutoTrader for inventory depth. Gumtree for private sellers. Facebook for the unicorns. All in one feed." },
+    { kicker: "AI analysis",                         title: "Red flags, condition, risk",         desc: "Gemini reads each ad, flags spares-or-repairs, missing MOT, suspicious mileage, and surfaces real concerns before you drive there." },
+    { kicker: "Watchlist",                           title: "Track price drops over time",        desc: "Bookmark a listing, watch the price fall. Price history tracked automatically — spot motivated sellers early." },
+  ];
+
+  const TIERS = [
+    { name: "Free",  price: "£0",     period: "",     desc: "Browse the feed. Limited scans.",       cta: "Get started free", highlight: false },
+    { name: "Basic", price: "£4.99",  period: "/mo",  desc: "50 scans / month. Full analysis.",      cta: "Start Basic",      highlight: false },
+    { name: "Pro",   price: "£10.99", period: "/mo",  desc: "Unlimited scans + auto-discovery.",     cta: "Start Pro",        highlight: true  },
+  ];
+
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
-      {/* Nav */}
-      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur-sm">
+    <div className="min-h-screen bg-page text-text-primary">
+
+      {/* ── Navbar ── */}
+      <header
+        className="sticky top-0 z-20 border-b border-border-default"
+        style={{
+          background: "color-mix(in oklab, var(--color-page) 90%, transparent)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Logo />
           <div className="flex items-center gap-2">
-            <span className="font-bold text-lg tracking-tight">AutoFlipr</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onLaunch}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
-            >
-              Sign in
-            </button>
-            <button
-              onClick={onRegister ?? onLaunch}
-              className="px-4 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Get started free
-            </button>
+            <ThemeToggle />
+            <button onClick={onLaunch} className="btn btn-ghost btn-sm">Sign in</button>
+            <button onClick={handleRegister} className="btn btn-primary btn-sm">Get started</button>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-8">
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-          Scanning AutoTrader for underpriced cars
-        </div>
-        <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight">
-          Find underpriced cars
-          <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500">
-            before anyone else does
-          </span>
-        </h1>
-        <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
-          AutoFlipr scrapes AutoTrader, runs every listing through AI analysis and a pricing
-          engine, then surfaces the deals worth your time — ranked by margin, not just price.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={onRegister ?? onLaunch}
-            className="px-7 py-3.5 bg-gray-900 hover:bg-gray-700 text-white font-semibold rounded-xl text-base transition-colors"
-          >
-            Get started free
-          </button>
-          <button
-            onClick={onLaunch}
-            className="px-7 py-3.5 border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl text-base transition-colors"
-          >
-            Sign in
-          </button>
-        </div>
-        <div className="mt-14 grid grid-cols-3 divide-x divide-gray-100 max-w-lg mx-auto">
-          {[
-            ["100%", "Open source"],
-            ["AI-powered", "Risk analysis"],
-            ["Self-hosted", "Your data"],
-          ].map(([val, label]) => (
-            <div key={label} className="px-6 py-2">
-              <p className="text-2xl font-bold text-gray-900">{val}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden">
+        {/* Grid texture with radial fade */}
+        <div
+          className="grid-bg absolute inset-0 pointer-events-none"
+          style={{
+            maskImage: "radial-gradient(ellipse 70% 70% at 50% 30%, black 30%, transparent 75%)",
+            WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 30%, black 30%, transparent 75%)",
+          }}
+        />
 
-      {/* Features */}
-      <section className="bg-gray-50 border-y border-gray-100 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-2">Everything you need to flip cars profitably</h2>
-          <p className="text-gray-400 text-center mb-12">No spreadsheets. No manual searching. No guessing.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="bg-white border border-gray-200 rounded-xl p-5">
-                <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 mb-4">
-                  {f.icon}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-1.5">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-14">
+          {/* Live pulse badge */}
+          <div className="label-caps inline-flex items-center gap-2 mb-6">
+            <span className="w-2 h-2 rounded-full bg-score-good" style={{ boxShadow: "0 0 0 4px color-mix(in oklab, var(--color-score-good) 22%, transparent)" }} />
+            LIVE · 2,847 deals scored today
+          </div>
+
+          <h1
+            className="font-extrabold text-text-primary mb-6"
+            style={{ fontSize: "clamp(44px, 7vw, 72px)", lineHeight: 1.02, letterSpacing: "-0.03em", maxWidth: 800 }}
+          >
+            The market<br />
+            for{" "}
+            <span className="font-mono" style={{ fontWeight: 700, fontSize: "0.92em" }}>
+              underpriced
+            </span>
+            <br />
+            used cars.
+          </h1>
+
+          <p className="text-lg text-text-secondary max-w-xl mb-8 leading-relaxed">
+            AutoFlipr scrapes AutoTrader, Gumtree and Facebook Marketplace, scores every listing with a Z-score pricing engine, and surfaces the deals worth buying. Built for UK flippers.
+          </p>
+
+          <div className="flex gap-3 flex-wrap">
+            <button onClick={handleRegister} className="btn btn-primary btn-lg">
+              Get started — free
+            </button>
+            <button
+              onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
+              className="btn btn-secondary btn-lg"
+            >
+              See pricing
+            </button>
+          </div>
+
+          {/* Stat strip */}
+          <div
+            className="mt-14 grid"
+            style={{
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 16,
+              paddingTop: 24,
+              paddingBottom: 24,
+              borderTop: "1px solid var(--color-border-default)",
+              borderBottom: "1px solid var(--color-border-default)",
+            }}
+          >
+            {[
+              ["SOURCES",       "03",    "AutoTrader · Gumtree · FB"],
+              ["SCANNED / DAY", "14k+",  "Listings ingested"],
+              ["AVG MARGIN",    "£1.4k", "On Pro-tier deals"],
+              ["MEDIAN SCORE",  "62",    "Across all sources"],
+            ].map(([k, v, sub]) => (
+              <div key={k as string}>
+                <div className="label-caps mb-2">{k}</div>
+                <div className="font-mono text-3xl font-bold tracking-tight text-text-primary" style={{ letterSpacing: "-0.02em" }}>{v}</div>
+                <div className="text-xs text-text-faint mt-1">{sub}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20 max-w-6xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center mb-2">How it works</h2>
-        <p className="text-gray-400 text-center mb-14">Three automated steps from listing to ranked deal</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {STEPS.map((s, i) => (
-            <div key={s.n} className="relative">
-              {i < STEPS.length - 1 && (
-                <div className="hidden md:block absolute top-6 left-[calc(100%-0px)] w-full h-px border-t border-dashed border-gray-200 z-0" />
-              )}
-              <div className="relative z-10">
-                <span className="text-5xl font-black text-gray-100 leading-none">{s.n}</span>
-                <h3 className="font-semibold text-gray-900 mt-1 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
-              </div>
-            </div>
+      {/* ── Live deals preview ── */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-4">
+        <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <div className="label-caps mb-2">Live feed · updated 2 min ago</div>
+            <h2 className="text-2xl font-bold text-text-primary tracking-tight">Today's underpriced finds</h2>
+          </div>
+          <button onClick={handleRegister} className="btn btn-secondary btn-sm">
+            Open deals feed →
+          </button>
+        </div>
+        <LiveDeals onRegister={handleRegister} />
+        <p className="mt-4 text-center text-xs text-text-faint">
+          Sign up to see full analysis, risk flags, MOT history and negotiation tips →
+        </p>
+      </section>
+
+      {/* ── Features ── */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="mb-8 max-w-xl">
+          <div className="label-caps mb-2">Why AutoFlipr</div>
+          <h2 className="text-2xl font-bold text-text-primary tracking-tight">Stop wasting evenings refreshing AutoTrader.</h2>
+        </div>
+        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+          {FEATURES.map((f) => (
+            <FeatureCard key={f.title} {...f} />
           ))}
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="bg-gray-50 border-y border-gray-100 py-20">
+      {/* ── How it works ── */}
+      <section className="max-w-6xl mx-auto px-6 pb-20">
+        <div className="mb-10 max-w-xl">
+          <div className="label-caps mb-2">How it works</div>
+          <h2 className="text-2xl font-bold text-text-primary tracking-tight">Three steps. No spreadsheets.</h2>
+        </div>
+        <div className="card p-8">
+          <div className="flex gap-10 flex-wrap">
+            <HowStep n={1} title="We scrape every listing" desc="14k+ listings/day across three platforms, normalised into a single schema. Continuous, never cached." />
+            <HowStep n={2} title="We score against the market" desc="Each listing is compared to same-spec sold cars. Anything <50 is filed; anything >70 is surfaced." />
+            <HowStep n={3} title="You buy. Flip. Repeat."   desc="Open the deal, run the AI analysis, use the negotiation cap, drive there. Sell two weeks later." />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section id="pricing" className="border-t border-border-default bg-surface-subtle py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-2">Pricing</h2>
-          <p className="text-gray-400 text-center mb-12">Start free. Scale when you need to.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {PLANS.map((plan) => (
+          <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+            <div>
+              <div className="label-caps mb-2">Pricing</div>
+              <h2 className="text-2xl font-bold text-text-primary tracking-tight">Pay for results, not access.</h2>
+            </div>
+            <button onClick={handleRegister} className="btn btn-secondary btn-sm text-xs">Compare plans →</button>
+          </div>
+
+          <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+            {TIERS.map((tier) => (
               <div
-                key={plan.name}
-                className={`rounded-2xl border p-8 flex flex-col ${
-                  plan.highlight
-                    ? "bg-gray-900 border-gray-900 text-white"
-                    : "bg-white border-gray-200 text-gray-900"
-                }`}
+                key={tier.name}
+                className="card p-7 flex flex-col relative"
+                style={tier.highlight ? { borderColor: "var(--color-text-primary)", borderWidth: 2 } : {}}
               >
-                <div className="mb-6">
-                  <p className={`text-xs font-semibold uppercase tracking-widest mb-3 ${plan.highlight ? "text-gray-400" : "text-gray-400"}`}>
-                    {plan.name}
-                  </p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-4xl font-extrabold">{plan.price}</span>
-                    {plan.sub && (
-                      <span className={`text-sm ${plan.highlight ? "text-gray-400" : "text-gray-400"}`}>
-                        {plan.sub}
-                      </span>
-                    )}
+                {tier.highlight && (
+                  <div
+                    className="absolute -top-3 left-6 bg-brand text-brand-fg text-[10px] font-bold px-3 py-1 rounded"
+                    style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}
+                  >
+                    Recommended
                   </div>
+                )}
+                <div className="label-caps mb-3">{tier.name}</div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="font-mono text-4xl font-bold text-text-primary" style={{ letterSpacing: "-0.03em" }}>
+                    {tier.price}
+                  </span>
+                  {tier.period && <span className="text-sm text-text-muted">{tier.period}</span>}
                 </div>
-                <ul className="space-y-2.5 flex-1 mb-8">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm">
-                      <svg
-                        className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.highlight ? "text-emerald-400" : "text-emerald-500"}`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className={plan.highlight ? "text-gray-300" : "text-gray-600"}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="text-sm text-text-muted mb-6 flex-1">{tier.desc}</div>
                 <button
-                  onClick={plan.highlight ? onLaunch : undefined}
-                  disabled={!plan.highlight}
-                  className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${
-                    plan.highlight
-                      ? "bg-white text-gray-900 hover:bg-gray-100"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  }`}
+                  onClick={handleRegister}
+                  className={tier.highlight ? "btn btn-primary w-full" : "btn btn-secondary w-full"}
                 >
-                  {plan.cta}
+                  {tier.cta}
                 </button>
               </div>
             ))}
           </div>
+
+          <p className="mt-8 text-center text-xs text-text-faint">
+            Prices in GBP · Cancel anytime · Stripe handles all payments securely
+          </p>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-gray-900">AutoFlipr</span>
-            <span className="text-gray-400 text-sm">— self-hosted car deal finder</span>
+      {/* ── Footer ── */}
+      <footer className="border-t border-border-default bg-surface py-10 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start justify-between gap-8 flex-wrap">
+          <div>
+            <Logo />
+            <p className="text-sm text-text-muted mt-3 max-w-xs leading-relaxed">
+              Continuous market scoring across AutoTrader, Gumtree and Facebook Marketplace.
+            </p>
           </div>
-          <p className="text-xs text-gray-400">
-            Built with FastAPI · Celery · Gemini · React · Tailwind
-          </p>
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()}</p>
+          <div className="flex gap-12 flex-wrap">
+            <div>
+              <div className="label-caps mb-3">Product</div>
+              <div className="flex flex-col gap-2 text-sm text-text-muted">
+                <button onClick={handleRegister} className="text-left hover:text-text-primary transition-colors">Deals</button>
+                <button onClick={handleRegister} className="text-left hover:text-text-primary transition-colors">Scan</button>
+                <button onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} className="text-left hover:text-text-primary transition-colors">Pricing</button>
+              </div>
+            </div>
+            <div>
+              <div className="label-caps mb-3">Account</div>
+              <div className="flex flex-col gap-2 text-sm text-text-muted">
+                <button onClick={onLaunch}        className="text-left hover:text-text-primary transition-colors">Sign in</button>
+                <button onClick={handleRegister}  className="text-left hover:text-text-primary transition-colors">Register</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto mt-8 pt-5 border-t border-border-faint flex flex-col sm:flex-row justify-between gap-3 text-xs text-text-faint">
+          <span>© {new Date().getFullYear()} AutoFlipr — UK</span>
+          <span>Pricing intelligence powered by Gemini · Not affiliated with listing platforms</span>
         </div>
       </footer>
+
     </div>
   );
 }

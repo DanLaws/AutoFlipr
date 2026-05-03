@@ -1,24 +1,102 @@
 interface Props {
   score: number | null;
-  confidence: string | null;
+  confidence?: string | null;
+  size?: number;
 }
 
-export default function ScoreBadge({ score, confidence }: Props) {
-  if (score === null) return <span className="text-gray-400 text-sm">—</span>;
+/**
+ * Numeric score centered inside a thin SVG radial progress ring.
+ * Ring colour: emerald (≥70) · amber (≥50) · gray (<50)
+ * Center:      dark bg + white text (good) · amber bg (fair) · subtle bg (poor)
+ */
+export default function ScoreBadge({ score, confidence, size = 48 }: Props) {
+  if (score === null || score === undefined) {
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className="inline-flex items-center justify-center text-text-faint text-lg"
+      >
+        —
+      </div>
+    );
+  }
 
-  const style =
-    score >= 70
-      ? "bg-gray-900 text-white border-gray-900"
-      : score >= 50
-      ? "bg-gray-100 text-gray-700 border-gray-200"
-      : "bg-gray-50 text-gray-400 border-gray-200";
+  const tier = score >= 70 ? "good" : score >= 50 ? "fair" : "poor";
+
+  const ringColor =
+    tier === "good" ? "var(--color-score-good)"
+    : tier === "fair" ? "var(--color-score-fair)"
+    : "var(--color-score-poor)";
+
+  const centerBg =
+    tier === "good" ? "var(--color-text-primary)"
+    : tier === "fair" ? "var(--color-score-fair)"
+    : "var(--color-surface-subtle)";
+
+  const centerFg =
+    tier === "good" ? "var(--color-brand-fg)"
+    : tier === "fair" ? "#FFFFFF"
+    : "var(--color-text-secondary)";
+
+  const r = (size - 4) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = (score / 100) * circ;
+  const innerSize = size - 10;
+  const fontSize = Math.round(size * 0.33);
 
   return (
-    <span className={`inline-flex items-center gap-1 border rounded-lg px-2.5 py-1 text-sm font-semibold font-mono ${style}`}>
-      {score.toFixed(0)}
-      {confidence === "low" && (
-        <span className="text-xs opacity-50" title="Low confidence — few comparables">?</span>
-      )}
-    </span>
+    <div
+      style={{ width: size, height: size }}
+      className="relative inline-flex items-center justify-center shrink-0"
+    >
+      {/* SVG ring */}
+      <svg
+        width={size}
+        height={size}
+        className="absolute inset-0"
+        style={{ transform: "rotate(-90deg)" }}
+      >
+        {/* Track */}
+        <circle
+          cx={size / 2} cy={size / 2} r={r}
+          stroke="var(--color-border-default)"
+          strokeWidth="2"
+          fill="none"
+        />
+        {/* Progress */}
+        <circle
+          cx={size / 2} cy={size / 2} r={r}
+          stroke={ringColor}
+          strokeWidth="2"
+          fill="none"
+          strokeDasharray={`${dash} ${circ}`}
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* Center disc */}
+      <div
+        style={{
+          width: innerSize,
+          height: innerSize,
+          background: centerBg,
+          color: centerFg,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "'JetBrains Mono', monospace",
+          fontWeight: 700,
+          fontSize,
+          letterSpacing: "-0.02em",
+          lineHeight: 1,
+        }}
+      >
+        {Math.round(score)}
+        {confidence === "low" && (
+          <span style={{ fontSize: fontSize * 0.55, marginLeft: 1, opacity: 0.65 }}>?</span>
+        )}
+      </div>
+    </div>
   );
 }

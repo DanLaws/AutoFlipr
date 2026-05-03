@@ -25,9 +25,7 @@ interface Props {
 
 export default function FilterDrawer({ draft, onChange, onApply, onClose }: Props) {
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -43,22 +41,22 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-200 z-50 flex flex-col shadow-xl">
+      <div
+        className="fixed right-0 top-0 h-full w-80 z-50 flex flex-col border-l border-border-default"
+        style={{ background: "var(--color-surface)", boxShadow: "var(--shadow-lg)" }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">View options</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+          <h2 className="text-sm font-semibold text-text-primary">View options</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-lg leading-none"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
           >
-            ×
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -66,7 +64,7 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
 
           {/* Sort by */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Sort by</p>
+            <p className="label-caps mb-3">Sort by</p>
             <div className="space-y-1">
               {SORT_OPTIONS.map((opt) => (
                 <button
@@ -74,8 +72,8 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
                   onClick={() => onChange({ sort_by: opt.value })}
                   className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     (draft.sort_by ?? "score") === opt.value
-                      ? "bg-gray-900 text-white font-medium"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-text-primary text-brand-fg font-medium"
+                      : "text-text-secondary hover:bg-surface-subtle"
                   }`}
                 >
                   {opt.label}
@@ -84,30 +82,50 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
             </div>
           </div>
 
-          {/* Profitable only */}
+          {/* Quick filters */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick filters</p>
+            <p className="label-caps mb-3">Quick filters</p>
             <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <p className="text-sm font-medium text-gray-700">Profitable only</p>
-                <p className="text-xs text-gray-400 mt-0.5">Est. margin &gt; £0</p>
+                <p className="text-sm font-medium text-text-primary">Profitable only</p>
+                <p className="text-xs text-text-muted mt-0.5">Est. margin &gt; £0</p>
               </div>
               <div
                 onClick={() => onChange({ profitable_only: !draft.profitable_only })}
-                className={`relative w-10 h-6 rounded-full transition-colors ${
-                  draft.profitable_only ? "bg-gray-900" : "bg-gray-200"
+                className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer ${
+                  draft.profitable_only ? "bg-text-primary" : "bg-border-strong"
                 }`}
               >
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                <div className={`absolute top-1 w-4 h-4 bg-brand-fg rounded-full shadow transition-transform ${
                   draft.profitable_only ? "translate-x-5" : "translate-x-1"
                 }`} />
               </div>
             </label>
           </div>
 
+          {/* Seller type */}
+          <div>
+            <p className="label-caps mb-3">Seller type</p>
+            <div className="flex rounded-lg border border-border-default overflow-hidden text-xs">
+              {([["", "All"], ["private", "Private"], ["trade", "Trade"]] as const).map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => onChange({ seller_type: val || undefined })}
+                  className={`flex-1 px-3 py-2 font-medium transition-colors ${
+                    (draft.seller_type ?? "") === val
+                      ? "bg-text-primary text-brand-fg"
+                      : "bg-surface text-text-secondary hover:bg-surface-subtle"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Sources */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Sources</p>
+            <p className="label-caps mb-3">Sources</p>
             <div className="space-y-2">
               {SOURCES.map((src) => (
                 <label
@@ -119,12 +137,10 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
                     checked={activeSources.includes(src.value)}
                     disabled={src.disabled}
                     onChange={() => !src.disabled && toggleSource(src.value)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
+                    className="w-4 h-4 rounded border-border-strong accent-[var(--color-brand)]"
                   />
-                  <span className="text-sm text-gray-700">{src.label}</span>
-                  {src.disabled && (
-                    <span className="text-xs text-gray-400 ml-auto">Soon</span>
-                  )}
+                  <span className="text-sm text-text-secondary">{src.label}</span>
+                  {src.disabled && <span className="text-xs text-text-faint ml-auto">Soon</span>}
                 </label>
               ))}
             </div>
@@ -133,10 +149,10 @@ export default function FilterDrawer({ draft, onChange, onApply, onClose }: Prop
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-100">
+        <div className="px-5 py-4 border-t border-border-default">
           <button
             onClick={() => { onApply(); onClose(); }}
-            className="w-full bg-gray-900 hover:bg-gray-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+            className="btn btn-primary w-full py-2.5"
           >
             Apply
           </button>

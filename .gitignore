@@ -1,4 +1,4 @@
-# ── Secrets — never commit these ─────────────────────────────────────────────
+# ── Secrets — NEVER commit these ──────────────────────────────────────────────
 .env
 .env.*
 !.env.example
@@ -32,6 +32,22 @@ frontend/.vite/
 # ── Docker ────────────────────────────────────────────────────────────────────
 docker-compose.override.yml
 
+# ── Logs and temp files ───────────────────────────────────────────────────────
+*.log
+*.pid
+*.sock
+
+# ── Celery ────────────────────────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ── Database dumps and backups ────────────────────────────────────────────────
+*.sql
+*.dump
+*.bak
+*.backup
+pgdata/
+
 # ── IDE / OS ──────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
@@ -39,17 +55,14 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
-*.log
 
-# ── Celery ────────────────────────────────────────────────────────────────────
-celerybeat-schedule
-celerybeat.pid
-
-# ── Personal / local-only files ───────────────────────────────────────────────
+# ── Private / local-only files ────────────────────────────────────────────────
+CLAUDE.md
 graphify-out/
 memory/
 *.md.rtf
 2[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md
+backend/test_scraper.py
 
 # ── Local tool config ─────────────────────────────────────────────────────────
 .claude/

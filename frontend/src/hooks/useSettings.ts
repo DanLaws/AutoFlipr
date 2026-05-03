@@ -13,6 +13,8 @@ export interface AppSettings {
   repairBufferMode: "percent" | "fixed";
   repairBufferValue: number | "";
   sellingPlatformFeePct: number | "";
+  roadTaxAnnual: number;
+  motFee: number;
 
   // My Vehicle
   regPlate: string;
@@ -30,6 +32,8 @@ const DEFAULTS: AppSettings = {
   repairBufferMode: "percent",
   repairBufferValue: 10,
   sellingPlatformFeePct: 3,
+  roadTaxAnnual: 195,
+  motFee: 54.85,
   regPlate: "",
   mpg: "",
   fuelPricePerLitre: "",

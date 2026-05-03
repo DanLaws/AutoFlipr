@@ -39,8 +39,8 @@ const TIERS = [
   {
     id: "pro",
     name: "Pro",
-    monthly: 14.99,
-    annual: 149.99,
+    monthly: 10.99,
+    annual: 109.99,
     scans: "Unlimited URL scans",
     features: [
       "Automated discovery engine (every 6 hrs)",
@@ -60,35 +60,29 @@ export default function PricingPage({ onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubscribe(planId: string) {
-    if (planId === "free") return; // nothing to do
+    if (planId === "free") return;
     if (!isLoggedIn) {
-      // Trigger register flow — handled by App
       window.dispatchEvent(new CustomEvent("cf:show-register"));
       return;
     }
-
     setLoading(planId);
     setError(null);
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           plan: planId,
           interval,
           success_url: `${window.location.origin}/?upgraded=1`,
-          cancel_url: `${window.location.origin}/pricing`,
+          cancel_url:  `${window.location.origin}/pricing`,
         }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: "Checkout failed" }));
         throw new Error(err.detail ?? "Checkout failed");
       }
-      const data = await res.json();
-      window.location.href = data.url;
+      window.location.href = (await res.json()).url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -97,41 +91,40 @@ export default function PricingPage({ onClose }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-16">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen px-4 py-16" style={{ background: "var(--color-page)" }}>
+      <div className="max-w-4xl mx-auto relative">
         {/* Header */}
         <div className="text-center mb-10">
           {onClose && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-sm"
-            >
+            <button onClick={onClose} className="absolute top-0 left-0 text-text-muted hover:text-text-primary text-sm transition-colors">
               ← Back
             </button>
           )}
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Simple pricing</h1>
-          <p className="mt-2 text-gray-500 text-sm">
-            Find underpriced cars before anyone else. Cancel anytime.
-          </p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Simple pricing</h1>
+          <p className="mt-2 text-text-muted text-sm">Find underpriced cars before anyone else. Cancel anytime.</p>
 
-          {/* Monthly / Annual toggle */}
-          <div className="mt-6 inline-flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          {/* Interval toggle */}
+          <div className="mt-6 inline-flex items-center gap-1 bg-surface-subtle rounded-lg p-1 border border-border-default">
             <button
               onClick={() => setInterval("monthly")}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                interval === "monthly" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                interval === "monthly"
+                  ? "bg-surface shadow-sm text-text-primary"
+                  : "text-text-muted hover:text-text-primary"
               }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setInterval("annual")}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                interval === "annual" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                interval === "annual"
+                  ? "bg-surface shadow-sm text-text-primary"
+                  : "text-text-muted hover:text-text-primary"
               }`}
             >
               Annual
-              <span className="ml-1.5 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+              <span className="ml-1.5 text-[10px] font-semibold text-success-strong bg-success-bg px-1.5 py-0.5 rounded">
                 Save ~17%
               </span>
             </button>
@@ -139,7 +132,7 @@ export default function PricingPage({ onClose }: Props) {
         </div>
 
         {error && (
-          <div className="max-w-md mx-auto mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 text-center">
+          <div className="max-w-md mx-auto mb-6 rounded-lg bg-danger-bg border border-danger-border px-4 py-3 text-sm text-danger-strong text-center">
             {error}
           </div>
         )}
@@ -155,50 +148,42 @@ export default function PricingPage({ onClose }: Props) {
             return (
               <div
                 key={tier.id}
-                className={`relative rounded-2xl border p-6 flex flex-col ${
-                  tier.highlight
-                    ? "border-gray-900 shadow-lg"
-                    : "border-gray-200"
-                }`}
+                className="card relative p-6 flex flex-col"
+                style={tier.highlight ? { borderColor: "var(--color-text-primary)", borderWidth: 2 } : {}}
               >
                 {tier.highlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-gray-900 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                    <span className="bg-brand text-brand-fg text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
                       Recommended
                     </span>
                   </div>
                 )}
 
                 <div className="mb-4">
-                  <h2 className="text-base font-semibold text-gray-900">{tier.name}</h2>
+                  <h2 className="text-base font-semibold text-text-primary">{tier.name}</h2>
                   <div className="mt-2 flex items-baseline gap-1">
                     {price === 0 ? (
-                      <span className="text-3xl font-bold text-gray-900">Free</span>
+                      <span className="font-mono text-3xl font-bold text-text-primary">Free</span>
                     ) : (
                       <>
-                        <span className="text-3xl font-bold text-gray-900">£{price}</span>
-                        <span className="text-sm text-gray-500">{period}</span>
+                        <span className="font-mono text-3xl font-bold text-text-primary">£{price}</span>
+                        <span className="text-sm text-text-muted">{period}</span>
                       </>
                     )}
                   </div>
-                  {tier.id !== "free" && interval === "annual" && (
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      Switch to annual · £{tier.annual}/yr
-                    </p>
-                  )}
-                  {tier.id !== "free" && interval === "monthly" && (
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      Switch to annual · £{tier.annual}/yr
+                  {tier.id !== "free" && (
+                    <p className="mt-0.5 text-xs text-text-faint">
+                      Annual billing · £{tier.annual}/yr
                     </p>
                   )}
                 </div>
 
-                <p className="text-sm font-medium text-gray-900 mb-3">{tier.scans}</p>
+                <p className="text-sm font-medium text-text-primary mb-3">{tier.scans}</p>
 
                 <ul className="space-y-2 flex-1 mb-6">
                   {tier.features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <li key={f} className="flex items-start gap-2 text-sm text-text-secondary">
+                      <svg className="w-4 h-4 text-success-strong mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                       {f}
@@ -207,13 +192,13 @@ export default function PricingPage({ onClose }: Props) {
                 </ul>
 
                 {isCurrent ? (
-                  <div className="w-full py-2.5 text-center rounded-lg border border-gray-300 text-sm font-medium text-gray-500">
+                  <div className="w-full py-2.5 text-center rounded-lg border border-border-strong text-sm font-medium text-text-muted">
                     Current plan
                   </div>
                 ) : tier.id === "free" ? (
                   <button
                     onClick={onClose}
-                    className="w-full py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="btn btn-secondary w-full py-2.5 text-sm"
                   >
                     {isLoggedIn ? "Continue with Free" : tier.cta}
                   </button>
@@ -222,9 +207,7 @@ export default function PricingPage({ onClose }: Props) {
                     onClick={() => handleSubscribe(tier.id)}
                     disabled={!!loading}
                     className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-                      tier.highlight
-                        ? "bg-gray-900 text-white hover:bg-gray-700"
-                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      tier.highlight ? "btn btn-primary" : "btn btn-secondary"
                     }`}
                   >
                     {isLoadingThis ? "Redirecting…" : tier.cta}
@@ -235,7 +218,7 @@ export default function PricingPage({ onClose }: Props) {
           })}
         </div>
 
-        <p className="mt-8 text-center text-xs text-gray-400">
+        <p className="mt-8 text-center text-xs text-text-faint">
           Prices in GBP. Cancel anytime. Stripe handles all payments securely.
         </p>
       </div>

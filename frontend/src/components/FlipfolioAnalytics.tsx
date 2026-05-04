@@ -16,22 +16,40 @@ interface ChartFlip {
   profit: number;
 }
 
-// ── Design palette (dark card, independent of app theme) ─────────────────────
-const C = {
-  surface:      "#11151F",
-  surface2:     "#161B27",
-  surface3:     "#1C2230",
-  border:       "#232A3B",
-  borderStrong: "#2E3650",
-  text:         "#E6EAF2",
-  textMuted:    "#8A93A6",
-  textFaint:    "#5A6178",
-  grid:         "rgba(255,255,255,0.04)",
-  gridStrong:   "rgba(255,255,255,0.08)",
-  emerald:      "#10B981",
-  emeraldSoft:  "rgba(16,185,129,0.15)",
-  rose:         "#F43F5E",
-  roseSoft:     "rgba(244,63,94,0.15)",
+// ── Design palettes ───────────────────────────────────────────────────────────
+const PALETTE = {
+  dark: {
+    surface:      "#11151F",
+    surface2:     "#161B27",
+    surface3:     "#1C2230",
+    border:       "#232A3B",
+    borderStrong: "#2E3650",
+    text:         "#E6EAF2",
+    textMuted:    "#8A93A6",
+    textFaint:    "#5A6178",
+    grid:         "rgba(255,255,255,0.04)",
+    gridStrong:   "rgba(255,255,255,0.10)",
+    emerald:      "#10B981",
+    emeraldSoft:  "rgba(16,185,129,0.15)",
+    rose:         "#F43F5E",
+    roseSoft:     "rgba(244,63,94,0.15)",
+  },
+  light: {
+    surface:      "#FFFFFF",
+    surface2:     "#F9FAFB",
+    surface3:     "#F3F4F6",
+    border:       "#E5E7EB",
+    borderStrong: "#D1D5DB",
+    text:         "#111827",
+    textMuted:    "#6B7280",
+    textFaint:    "#9CA3AF",
+    grid:         "rgba(0,0,0,0.05)",
+    gridStrong:   "rgba(0,0,0,0.12)",
+    emerald:      "#059669",
+    emeraldSoft:  "rgba(5,150,105,0.12)",
+    rose:         "#E11D48",
+    roseSoft:     "rgba(225,29,72,0.10)",
+  },
 };
 const MONO = "'JetBrains Mono', ui-monospace, monospace";
 
@@ -71,13 +89,6 @@ function applyRange(flips: ChartFlip[], range: Range): ChartFlip[] {
   return flips.filter(f => new Date(f.sold) >= cutoff);
 }
 
-// ── Tooltip row helper (returns HTML string) ──────────────────────────────────
-function tipRow(label: string, value: string, color?: string) {
-  return `<div style="display:flex;justify-content:space-between;gap:16px">
-    <span style="color:${C.textMuted}">${label}</span>
-    <span style="font-family:${MONO};font-weight:600${color ? `;color:${color}` : ""}">${value}</span>
-  </div>`;
-}
 function tipTitle(s: string) {
   return `<div style="font-weight:600;margin-bottom:6px;white-space:normal;max-width:200px">${s}</div>`;
 }
@@ -87,6 +98,28 @@ export default function FlipfolioAnalytics({ entries }: { entries: FlipEntry[] }
   const [view, setView]   = useState<View>("profit-time");
   const [range, setRange] = useState<Range>("All");
   const [tip, setTip]     = useState<{ x: number; y: number; html: string } | null>(null);
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains("dark"),
+  );
+
+  // Track theme changes from anywhere in the app
+  useEffect(() => {
+    const observer = new MutationObserver(() =>
+      setIsDark(document.documentElement.classList.contains("dark")),
+    );
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const C = isDark ? PALETTE.dark : PALETTE.light;
+
+  // Tooltip row — defined here so it closes over the current C
+  function tipRow(label: string, value: string, color?: string) {
+    return `<div style="display:flex;justify-content:space-between;gap:16px">
+      <span style="color:${C.textMuted}">${label}</span>
+      <span style="font-family:${MONO};font-weight:600${color ? `;color:${color}` : ""}">${value}</span>
+    </div>`;
+  }
 
   const svgRef  = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -334,7 +367,7 @@ export default function FlipfolioAnalytics({ entries }: { entries: FlipEntry[] }
       el("text", { x: ML + PW / 2, y: H - 4, "text-anchor": "middle", fill: C.textFaint, "font-size": 10, "letter-spacing": "0.1em" }, "DAYS TO SELL");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, flips]);
+  }, [view, flips, isDark]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   if (allFlips.length === 0) return null;

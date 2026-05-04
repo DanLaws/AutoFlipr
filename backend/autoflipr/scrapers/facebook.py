@@ -103,6 +103,9 @@ def _extract_images(html: str) -> list[str]:
 
 
 # ── Playwright page-action callbacks ─────────────────────────────────────────
+# StealthyFetcher returns the raw HTTP response body (empty for React SPAs).
+# We capture the fully-rendered DOM via page.content() inside the page_action
+# callback, after scrolling has triggered lazy-loaded listings.
 
 async def _dismiss_dialogs(page) -> None:
     """Accept cookie consent banners. Raises FacebookLoginWallError on login wall."""
@@ -130,18 +133,27 @@ async def _dismiss_dialogs(page) -> None:
             pass
 
 
-async def _search_page_action(page) -> None:
-    """Dismiss dialogs and scroll to load more search results."""
-    await _dismiss_dialogs(page)
-    for _ in range(6):
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        await page.wait_for_timeout(1_500)
+def _make_search_action(capture: dict):
+    """Return a page_action that scrolls and captures the rendered DOM."""
+    async def _action(page) -> None:
+        await _dismiss_dialogs(page)
+        await page.wait_for_timeout(3_000)  # let React render initial listings
+        for _ in range(6):
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            await page.wait_for_timeout(1_500)
+        capture["html"] = await page.content()
+        capture["url"]  = page.url
+    return _action
 
 
-async def _listing_page_action(page) -> None:
-    """Dismiss dialogs on a listing detail page."""
-    await _dismiss_dialogs(page)
-    await page.wait_for_timeout(1_000)
+def _make_listing_action(capture: dict):
+    """Return a page_action that dismisses dialogs and captures the rendered DOM."""
+    async def _action(page) -> None:
+        await _dismiss_dialogs(page)
+        await page.wait_for_timeout(2_000)
+        capture["html"] = await page.content()
+        capture["url"]  = page.url
+    return _action
 
 
 # ── Scraper class ─────────────────────────────────────────────────────────────
@@ -173,21 +185,25 @@ class FacebookScraper(BaseScraper):
             max_price=search_params.get("max_price", settings.fb_max_price),
         )
 
+        capture: dict = {}
         try:
             log.info("[fb] Fetching search: %s", url)
-            response = await StealthyFetcher.async_fetch(
+            await StealthyFetcher.async_fetch(
                 url,
                 headless=True,
                 cookies=cookies,
-                page_action=_search_page_action,
+                page_action=_make_search_action(capture),
                 network_idle=True,
-                timeout=45_000,
+                timeout=60_000,
             )
 
-            if self._is_login_wall(response.url, response.text):
+            html = capture.get("html", "")
+            current_url = capture.get("url", "")
+
+            if not html or self._is_login_wall(current_url, html):
                 raise FacebookLoginWallError("Login wall detected — cookies expired")
 
-            ids = _extract_listing_ids(response.text)
+            ids = _extract_listing_ids(html)
             log.info("[fb] Discovered %d listing IDs", len(ids))
             return ids
 
@@ -204,25 +220,29 @@ class FacebookScraper(BaseScraper):
 
         url = f"{BASE_URL}/marketplace/item/{listing_id}/"
 
+        capture: dict = {}
         try:
-            response = await StealthyFetcher.async_fetch(
+            await StealthyFetcher.async_fetch(
                 url,
                 headless=True,
                 cookies=cookies,
-                page_action=_listing_page_action,
+                page_action=_make_listing_action(capture),
                 network_idle=True,
-                timeout=30_000,
+                timeout=45_000,
             )
 
-            if self._is_login_wall(response.url, response.text):
+            html = capture.get("html", "")
+            current_url = capture.get("url", "")
+
+            if not html or self._is_login_wall(current_url, html):
                 raise FacebookLoginWallError("Login wall detected — cookies expired")
 
             # Removed/invalid listings redirect away from /marketplace/item/
-            if "marketplace/item" not in response.url and listing_id not in response.url:
+            if "marketplace/item" not in current_url and listing_id not in current_url:
                 log.debug("[fb] Listing %s appears removed", listing_id)
                 return None
 
-            if len(response.text) < 2_000:
+            if len(html) < 2_000:
                 log.debug("[fb] Listing %s: HTML too short, skipping", listing_id)
                 return None
 
@@ -230,8 +250,8 @@ class FacebookScraper(BaseScraper):
                 source="fb",
                 external_id=listing_id,
                 url=url,
-                raw_html=response.text,
-                image_urls=_extract_images(response.text),
+                raw_html=html,
+                image_urls=_extract_images(html),
             )
 
         except FacebookLoginWallError:

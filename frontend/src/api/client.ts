@@ -198,6 +198,7 @@ export interface FlipEntry {
   transmission: string | null;
   features: string[] | null;
   mot_advisories: string | null;
+  listing_output: ListingOut | null;
 }
 
 export interface FlipIn {
@@ -212,11 +213,11 @@ export interface FlipIn {
   date_sold: string | null;
   source: string | null;
   notes: string | null;
-  colour: string | null;
-  fuel: string | null;
-  transmission: string | null;
-  features: string[] | null;
-  mot_advisories: string | null;
+  colour?: string | null;
+  fuel?: string | null;
+  transmission?: string | null;
+  features?: string[] | null;
+  mot_advisories?: string | null;
 }
 
 export interface PricingStrategy {

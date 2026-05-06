@@ -222,6 +222,7 @@ class FlipEntry(Base):
     transmission: Mapped[Optional[str]] = mapped_column(Text)
     features: Mapped[Optional[list]] = mapped_column(JSONB)
     mot_advisories: Mapped[Optional[str]] = mapped_column(Text)
+    listing_output: Mapped[Optional[dict]] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
     user: Mapped["User"] = relationship()

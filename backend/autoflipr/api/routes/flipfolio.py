@@ -6,6 +6,8 @@ from pydantic import BaseModel, field_validator
 
 from autoflipr.api.deps import DBSession, CurrentUser
 from autoflipr.db.models import FlipEntry
+from autoflipr.llm import gemini_client
+from autoflipr.llm.schemas import ListingOutput
 
 router = APIRouter(prefix="/api/flipfolio", tags=["flipfolio"])
 
@@ -22,6 +24,11 @@ class FlipIn(BaseModel):
     date_sold: Optional[date] = None
     source: Optional[str] = None
     notes: Optional[str] = None
+    colour: Optional[str] = None
+    fuel: Optional[str] = None
+    transmission: Optional[str] = None
+    features: Optional[list[str]] = None
+    mot_advisories: Optional[str] = None
 
     @field_validator("purchase_price", "additional_costs")
     @classmethod
@@ -54,7 +61,32 @@ class FlipOut(BaseModel):
     days_to_sell: Optional[int]
     source: Optional[str]
     notes: Optional[str]
+    colour: Optional[str]
+    fuel: Optional[str]
+    transmission: Optional[str]
+    features: Optional[list[str]]
+    mot_advisories: Optional[str]
     created_at: datetime
+
+
+class GenerateListingIn(BaseModel):
+    features: list[str] = []
+    mot_advisories: Optional[str] = None
+
+
+class PricingStrategyOut(BaseModel):
+    listed_price: int
+    target_price: int
+    rationale: str
+    estimated_days: str
+
+
+class ListingOut(BaseModel):
+    title: str
+    description: str
+    quick_sale: PricingStrategyOut
+    balanced: PricingStrategyOut
+    premium: PricingStrategyOut
 
 
 def _to_out(entry: FlipEntry) -> FlipOut:
@@ -81,6 +113,11 @@ def _to_out(entry: FlipEntry) -> FlipOut:
         days_to_sell=days,
         source=entry.source,
         notes=entry.notes,
+        colour=entry.colour,
+        fuel=entry.fuel,
+        transmission=entry.transmission,
+        features=entry.features,
+        mot_advisories=entry.mot_advisories,
         created_at=entry.created_at,
     )
 
@@ -124,3 +161,45 @@ def delete_flip(entry_id: int, user: CurrentUser, db: DBSession) -> None:
         raise HTTPException(status_code=404, detail="Not found")
     db.delete(entry)
     db.commit()
+
+
+@router.post("/{entry_id}/generate-listing", response_model=ListingOut)
+def generate_listing(entry_id: int, body: GenerateListingIn, user: CurrentUser, db: DBSession) -> ListingOut:
+    entry = db.get(FlipEntry, entry_id)
+    if not entry or entry.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    # Persist the features and MOT advisories so they're available next time
+    entry.features = body.features or []
+    entry.mot_advisories = body.mot_advisories
+    db.commit()
+
+    total_cost = entry.purchase_price + entry.additional_costs
+    raw, _, _ = gemini_client.generate_listing(
+        make=entry.make,
+        model=entry.model,
+        year=entry.year,
+        mileage=entry.mileage,
+        colour=entry.colour,
+        fuel=entry.fuel,
+        transmission=entry.transmission,
+        total_cost=total_cost,
+        features=body.features,
+        mot_advisories=body.mot_advisories,
+    )
+
+    if not raw:
+        raise HTTPException(status_code=502, detail="Listing generation failed — please try again")
+
+    try:
+        parsed = ListingOutput.model_validate(raw)
+    except Exception:
+        raise HTTPException(status_code=502, detail="Listing generation returned invalid data")
+
+    return ListingOut(
+        title=parsed.title,
+        description=parsed.description,
+        quick_sale=PricingStrategyOut(**parsed.pricing.quick_sale.model_dump()),
+        balanced=PricingStrategyOut(**parsed.pricing.balanced.model_dump()),
+        premium=PricingStrategyOut(**parsed.pricing.premium.model_dump()),
+    )

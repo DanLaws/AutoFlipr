@@ -216,34 +216,34 @@ export default function ListingAssistant({ entry, onClose }: Props) {
       }}
     >
       <div
-        className="card w-full max-w-3xl my-6"
+        className="card w-full max-w-3xl my-8 p-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between mb-5">
+        <div className="flex items-start justify-between mb-7">
           <div>
-            <h2 className="text-base font-semibold text-text-primary">
+            <h2 className="text-lg font-semibold text-text-primary">
               Listing Assistant
             </h2>
-            <p className="text-sm text-text-muted mt-0.5">{carLabel}</p>
+            <p className="text-sm text-text-muted mt-1">{carLabel}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-text-muted hover:text-text-primary transition-colors shrink-0"
+            className="text-text-muted hover:text-text-primary transition-colors shrink-0 ml-4"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Features */}
-        <div className="mb-5">
-          <p className="field-label mb-2">Features</p>
-          <div className="space-y-3">
+        <div className="mb-7">
+          <p className="field-label mb-3">Features</p>
+          <div className="space-y-5">
             {FEATURE_GROUPS.map((group) => (
               <div key={group.label}>
-                <p className="text-xs font-medium text-text-muted mb-1.5">{group.label}</p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">{group.label}</p>
                 <div className="flex flex-wrap gap-2">
                   {group.features.map((f) => {
                     const on = selected.has(f);
@@ -251,7 +251,7 @@ export default function ListingAssistant({ entry, onClose }: Props) {
                       <button
                         key={f}
                         onClick={() => toggleFeature(f)}
-                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                           on
                             ? "bg-text-primary text-brand-fg border-text-primary"
                             : "border-border-default text-text-secondary hover:border-text-muted"
@@ -271,15 +271,15 @@ export default function ListingAssistant({ entry, onClose }: Props) {
         </div>
 
         {/* MOT advisories */}
-        <div className="mb-5">
+        <div className="mb-7">
           <label className="block">
             <span className="field-label">MOT advisories</span>
-            <p className="text-xs text-text-faint mt-0.5 mb-1">
+            <p className="text-xs text-text-faint mt-1 mb-2">
               Paste the latest advisory notes from the MOT certificate. The assistant will mention them honestly in the advert.
             </p>
             <textarea
               className="input mt-1 resize-none"
-              rows={3}
+              rows={4}
               placeholder="e.g. Nearside front tyre worn close to limit (2.1mm), slight corrosion to rear silencer..."
               value={motAdvisories}
               onChange={(e) => setMotAdvisories(e.target.value)}
@@ -288,7 +288,7 @@ export default function ListingAssistant({ entry, onClose }: Props) {
         </div>
 
         {/* Generate button */}
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-8">
           <button
             onClick={generate}
             disabled={generating}
@@ -310,38 +310,38 @@ export default function ListingAssistant({ entry, onClose }: Props) {
         </div>
 
         {err && (
-          <p className="text-sm text-danger-text mb-4">{err}</p>
+          <p className="text-sm text-danger-text mb-5">{err}</p>
         )}
 
         {/* Results */}
         {result && (
-          <div className="space-y-5 border-t border-border-default pt-5">
+          <div className="space-y-6 border-t border-border-default pt-7">
             {/* Title */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-2">
                 <p className="field-label">Advert title</p>
                 <CopyButton text={result.title} />
               </div>
-              <div className="rounded-lg bg-surface-subtle border border-border-default px-3 py-2.5 text-sm font-medium text-text-primary">
+              <div className="rounded-lg bg-surface-subtle border border-border-default px-4 py-3 text-sm font-medium text-text-primary">
                 {result.title}
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-2">
                 <p className="field-label">Description</p>
                 <CopyButton text={result.description} />
               </div>
-              <div className="rounded-lg bg-surface-subtle border border-border-default px-3 py-3 text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
+              <div className="rounded-lg bg-surface-subtle border border-border-default px-4 py-4 text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
                 {result.description}
               </div>
             </div>
 
             {/* Pricing strategies */}
             <div>
-              <p className="field-label mb-3">Pricing strategies</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <p className="field-label mb-4">Pricing strategies</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <PricingCard
                   tier="quick_sale"
                   label="Quick sale"
@@ -361,7 +361,7 @@ export default function ListingAssistant({ entry, onClose }: Props) {
                   data={result.premium}
                 />
               </div>
-              <p className="text-xs text-text-faint mt-2">
+              <p className="text-xs text-text-faint mt-3">
                 Listed price includes negotiation headroom. Accept price is your minimum target.
               </p>
             </div>

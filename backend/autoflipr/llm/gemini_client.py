@@ -376,7 +376,7 @@ def generate_listing(
         system=_LISTING_SYSTEM,
         user_content=user_content,
         response_schema=_LISTING_RESPONSE_SCHEMA,
-        max_output_tokens=1024,
+        max_output_tokens=2048,
     )
 
 

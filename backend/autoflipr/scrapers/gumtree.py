@@ -180,9 +180,10 @@ class GumtreeScraper(BaseScraper):
                         image_urls = await fetch_page.evaluate(f"""
                             () => {{
                                 const cdn = '{_IMG_CDN}';
+                                const id = '{numeric_id}';
                                 const imgs = [...document.querySelectorAll('img')]
                                     .map(i => i.src)
-                                    .filter(src => src.includes(cdn));
+                                    .filter(src => src.includes(cdn) && src.includes(id));
                                 const seen = new Set();
                                 return imgs.filter(src => {{
                                     if (seen.has(src)) return false;

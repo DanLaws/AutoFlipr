@@ -8,6 +8,8 @@ export const EMPTY_FORM: FlipIn = {
   purchase_price: 0, sale_price: null, additional_costs: 0,
   date_bought: new Date().toISOString().slice(0, 10),
   date_sold: null, source: null, notes: null,
+  colour: null, fuel: null, transmission: null,
+  features: null, mot_advisories: null,
 };
 
 export function parseNum(s: string): number | null {
@@ -161,6 +163,37 @@ export default function FlipModal({ initial, onClose, onSave }: FlipModalProps) 
               <option value="other">Other</option>
             </select>
           </label>
+
+          <div className="grid grid-cols-3 gap-3">
+            <label className="block">
+              <span className="field-label">Colour</span>
+              <input className="input mt-1" value={form.colour ?? ""}
+                onChange={e => set("colour", e.target.value || null)}
+                placeholder="Silver" />
+            </label>
+            <label className="block">
+              <span className="field-label">Fuel</span>
+              <select className="input mt-1" value={form.fuel ?? ""}
+                onChange={e => set("fuel", e.target.value || null)}>
+                <option value="">— Select —</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Plug-in hybrid">Plug-in hybrid</option>
+                <option value="Electric">Electric</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="field-label">Transmission</span>
+              <select className="input mt-1" value={form.transmission ?? ""}
+                onChange={e => set("transmission", e.target.value || null)}>
+                <option value="">— Select —</option>
+                <option value="Manual">Manual</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Semi-automatic">Semi-automatic</option>
+              </select>
+            </label>
+          </div>
 
           <label className="block">
             <span className="field-label">Notes</span>

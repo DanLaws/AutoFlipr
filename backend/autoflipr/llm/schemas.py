@@ -87,6 +87,29 @@ class MOTNarrative(BaseModel):
     notable_advisories: list[str] = []
 
 
+class PricingStrategy(BaseModel):
+    """One of three pricing tiers from the listing assistant."""
+
+    listed_price: int
+    target_price: int
+    rationale: str
+    estimated_days: str
+
+
+class ListingPricing(BaseModel):
+    quick_sale: PricingStrategy
+    balanced: PricingStrategy
+    premium: PricingStrategy
+
+
+class ListingOutput(BaseModel):
+    """Validated output from the listing generation prompt."""
+
+    title: str
+    description: str
+    pricing: ListingPricing
+
+
 class VehicleAnalysis(BaseModel):
     """Validated output from the vehicle listing quality analysis prompt."""
 

@@ -217,6 +217,11 @@ class FlipEntry(Base):
     date_sold: Mapped[Optional[date]] = mapped_column(Date)
     source: Mapped[Optional[str]] = mapped_column(Text)  # autotrader | gumtree | facebook | other
     notes: Mapped[Optional[str]] = mapped_column(Text)
+    colour: Mapped[Optional[str]] = mapped_column(Text)
+    fuel: Mapped[Optional[str]] = mapped_column(Text)
+    transmission: Mapped[Optional[str]] = mapped_column(Text)
+    features: Mapped[Optional[list]] = mapped_column(JSONB)
+    mot_advisories: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
     user: Mapped["User"] = relationship()

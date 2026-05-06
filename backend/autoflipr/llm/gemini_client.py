@@ -256,6 +256,109 @@ def _call_gemini(
     raise last_exc  # all keys × models exhausted or unavailable
 
 
+_LISTING_SYSTEM = (
+    "You are an expert UK car sales copywriter helping private sellers write compelling classified adverts. "
+    "Write honest, friendly descriptions that highlight the car's genuine strengths. "
+    "Naturally weave all provided features into the description — do NOT use a bullet list for features inside the description; "
+    "write them as flowing sentences. "
+    "If MOT advisories are present, mention them honestly but frame them fairly. "
+    "For pricing, remember that UK private buyers always try to barter, so listed prices must be HIGHER than the "
+    "minimum acceptable (target_price) to leave room for negotiation. "
+    "quick_sale: priced to sell within 1–7 days — at or just above break-even, attractive to the first serious viewer. "
+    "balanced: realistic market price, likely to sell in 2–4 weeks with a reasonable profit margin. "
+    "premium: maximum price, patient seller comfortable waiting 4–12 weeks, highest margin. "
+    "estimated_days: provide a plain range string e.g. '1–7 days', '2–4 weeks', '4–12 weeks'. "
+    "rationale: one sentence explaining the strategy and why the listed price is set above target."
+)
+
+_LISTING_RESPONSE_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "title": types.Schema(type=types.Type.STRING),
+        "description": types.Schema(type=types.Type.STRING),
+        "pricing": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "quick_sale": types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "listed_price": types.Schema(type=types.Type.INTEGER),
+                        "target_price": types.Schema(type=types.Type.INTEGER),
+                        "rationale": types.Schema(type=types.Type.STRING),
+                        "estimated_days": types.Schema(type=types.Type.STRING),
+                    },
+                    required=["listed_price", "target_price", "rationale", "estimated_days"],
+                ),
+                "balanced": types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "listed_price": types.Schema(type=types.Type.INTEGER),
+                        "target_price": types.Schema(type=types.Type.INTEGER),
+                        "rationale": types.Schema(type=types.Type.STRING),
+                        "estimated_days": types.Schema(type=types.Type.STRING),
+                    },
+                    required=["listed_price", "target_price", "rationale", "estimated_days"],
+                ),
+                "premium": types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "listed_price": types.Schema(type=types.Type.INTEGER),
+                        "target_price": types.Schema(type=types.Type.INTEGER),
+                        "rationale": types.Schema(type=types.Type.STRING),
+                        "estimated_days": types.Schema(type=types.Type.STRING),
+                    },
+                    required=["listed_price", "target_price", "rationale", "estimated_days"],
+                ),
+            },
+            required=["quick_sale", "balanced", "premium"],
+        ),
+    },
+    required=["title", "description", "pricing"],
+)
+
+
+def generate_listing(
+    make: str,
+    model: str,
+    year: int | None,
+    mileage: int | None,
+    colour: str | None,
+    fuel: str | None,
+    transmission: str | None,
+    total_cost: int,
+    features: list[str],
+    mot_advisories: str | None,
+) -> tuple[Optional[dict], int, int]:
+    parts = [
+        f"Make: {make}",
+        f"Model: {model}",
+    ]
+    if year:
+        parts.append(f"Year: {year}")
+    if mileage:
+        parts.append(f"Mileage: {mileage:,} miles")
+    if colour:
+        parts.append(f"Colour: {colour}")
+    if fuel:
+        parts.append(f"Fuel type: {fuel}")
+    if transmission:
+        parts.append(f"Transmission: {transmission}")
+    parts.append(f"Total cost to seller (purchase + extras): £{total_cost:,}")
+    if features:
+        parts.append(f"Features: {', '.join(features)}")
+    else:
+        parts.append("Features: None specified")
+    parts.append(f"MOT advisories: {mot_advisories.strip() if mot_advisories else 'None'}")
+
+    user_content = "Generate a classified car advert for:\n\n" + "\n".join(parts)
+    return _call_gemini(
+        system=_LISTING_SYSTEM,
+        user_content=user_content,
+        response_schema=_LISTING_RESPONSE_SCHEMA,
+        max_output_tokens=1024,
+    )
+
+
 def _html_to_text(html: str) -> str:
     import re
     text = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL)

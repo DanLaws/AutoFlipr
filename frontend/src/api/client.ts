@@ -193,6 +193,11 @@ export interface FlipEntry {
   days_to_sell: number | null;
   source: string | null;
   notes: string | null;
+  colour: string | null;
+  fuel: string | null;
+  transmission: string | null;
+  features: string[] | null;
+  mot_advisories: string | null;
 }
 
 export interface FlipIn {
@@ -207,6 +212,26 @@ export interface FlipIn {
   date_sold: string | null;
   source: string | null;
   notes: string | null;
+  colour: string | null;
+  fuel: string | null;
+  transmission: string | null;
+  features: string[] | null;
+  mot_advisories: string | null;
+}
+
+export interface PricingStrategy {
+  listed_price: number;
+  target_price: number;
+  rationale: string;
+  estimated_days: string;
+}
+
+export interface ListingOut {
+  title: string;
+  description: string;
+  quick_sale: PricingStrategy;
+  balanced: PricingStrategy;
+  premium: PricingStrategy;
 }
 
 export const api = {

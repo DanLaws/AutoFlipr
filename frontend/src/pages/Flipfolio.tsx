@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiPost, apiPut, apiDelete, type FlipEntry, type FlipIn } from "../api/client";
 import FlipModal from "../components/FlipModal";
 import FlipfolioAnalytics from "../components/FlipfolioAnalytics";
+import ListingAssistant from "../components/ListingAssistant";
 
 type SortKey = "profit" | "date_sold";
 type SortDir = "asc" | "desc";
@@ -33,6 +34,7 @@ export default function FlipfolioPage() {
   });
 
   const [modal, setModal] = useState<"add" | FlipEntry | null>(null);
+  const [listingEntry, setListingEntry] = useState<FlipEntry | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("date_sold");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [sourceFilter, setSourceFilter] = useState<string>("");
@@ -170,6 +172,7 @@ export default function FlipfolioPage() {
                     <td className="px-4 py-3 text-text-secondary">{e.date_sold ?? <span className="text-text-faint">—</span>}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">
+                        <button onClick={() => setListingEntry(e)} className="text-xs text-text-muted hover:text-text-primary transition-colors">Listing assistant</button>
                         <button onClick={() => setModal(e)} className="text-xs text-text-muted hover:text-text-primary transition-colors">Edit</button>
                         <button onClick={() => handleDelete(e.id)} className="text-xs text-danger-text hover:opacity-70 transition-opacity">Delete</button>
                       </div>
@@ -182,6 +185,13 @@ export default function FlipfolioPage() {
         </>
       )}
 
+      {listingEntry && (
+        <ListingAssistant
+          entry={listingEntry}
+          onClose={() => setListingEntry(null)}
+        />
+      )}
+
       {modal !== null && (
         <FlipModal
           initial={modal === "add" ? null : {
@@ -189,6 +199,8 @@ export default function FlipfolioPage() {
             purchase_price: modal.purchase_price, sale_price: modal.sale_price,
             additional_costs: modal.additional_costs, date_bought: modal.date_bought,
             date_sold: modal.date_sold, source: modal.source, notes: modal.notes,
+            colour: modal.colour, fuel: modal.fuel, transmission: modal.transmission,
+            features: modal.features, mot_advisories: modal.mot_advisories,
           }}
           onClose={() => setModal(null)}
           onSave={handleSave}

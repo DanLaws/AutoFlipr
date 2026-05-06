@@ -1,13 +1,16 @@
-from datetime import date, datetime
+import statistics
+from datetime import date, datetime, timezone, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, field_validator
+from sqlalchemy import and_, func
 
 from autoflipr.api.deps import DBSession, CurrentUser
-from autoflipr.db.models import FlipEntry
+from autoflipr.db.models import FlipEntry, Listing
 from autoflipr.llm import gemini_client
 from autoflipr.llm.schemas import ListingOutput
+from autoflipr.scoring.engine import DEPRECIATION_PER_MILE
 
 router = APIRouter(prefix="/api/flipfolio", tags=["flipfolio"])
 
@@ -87,6 +90,75 @@ class ListingOut(BaseModel):
     quick_sale: PricingStrategyOut
     balanced: PricingStrategyOut
     premium: PricingStrategyOut
+
+
+_LOOKBACK_DAYS = 90
+_YEAR_BAND = 1
+_MILEAGE_BAND = 0.30
+
+
+def _fetch_market_comps(
+    db,
+    make: str,
+    model: str,
+    year: Optional[int],
+    mileage: Optional[int],
+) -> dict:
+    """Query the listings table for comparable cars and return market summary stats."""
+    if not (make and model and year and mileage):
+        return {"count": 0, "comps": []}
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=_LOOKBACK_DAYS)
+
+    def _query(year_band: int, mileage_lo: float, mileage_hi: float):
+        return (
+            db.query(Listing.price_gbp, Listing.mileage)
+            .filter(
+                and_(
+                    func.lower(Listing.make) == make.lower(),
+                    func.lower(Listing.model) == model.lower(),
+                    Listing.year.between(year - year_band, year + year_band),
+                    Listing.mileage.between(
+                        int(mileage * mileage_lo),
+                        int(mileage * mileage_hi),
+                    ),
+                    Listing.llm_status == "valid",
+                    Listing.first_seen_at >= cutoff,
+                    Listing.removed_at.is_(None),
+                    Listing.price_gbp.isnot(None),
+                    Listing.mileage.isnot(None),
+                )
+            )
+            .limit(200)
+            .all()
+        )
+
+    rows = _query(_YEAR_BAND, 1 - _MILEAGE_BAND, 1 + _MILEAGE_BAND)
+    if len(rows) < 5:
+        rows = _query(2, 0.6, 1.4)
+
+    if not rows:
+        return {"count": 0, "comps": []}
+
+    # Mileage-adjust each comp price to the target mileage
+    adjusted = [
+        int(price + DEPRECIATION_PER_MILE * (comp_mileage - mileage))
+        for price, comp_mileage in rows
+    ]
+    adj_median = int(statistics.median(adjusted))
+    raw_prices = sorted(r[0] for r in rows)
+
+    return {
+        "count": len(rows),
+        "median_asking": int(statistics.median(raw_prices)),
+        "adj_median": adj_median,
+        "min_asking": raw_prices[0],
+        "max_asking": raw_prices[-1],
+        "samples": [
+            {"price": r[0], "mileage": r[1]}
+            for r in sorted(rows, key=lambda x: x[0])[:8]
+        ],
+    }
 
 
 def _to_out(entry: FlipEntry) -> FlipOut:
@@ -175,6 +247,8 @@ def generate_listing(entry_id: int, body: GenerateListingIn, user: CurrentUser, 
     db.commit()
 
     total_cost = entry.purchase_price + entry.additional_costs
+    market = _fetch_market_comps(db, entry.make, entry.model, entry.year, entry.mileage)
+
     raw, _, _ = gemini_client.generate_listing(
         make=entry.make,
         model=entry.model,
@@ -186,6 +260,7 @@ def generate_listing(entry_id: int, body: GenerateListingIn, user: CurrentUser, 
         total_cost=total_cost,
         features=body.features,
         mot_advisories=body.mot_advisories,
+        market=market,
     )
 
     if not raw:

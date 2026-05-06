@@ -262,13 +262,15 @@ _LISTING_SYSTEM = (
     "Naturally weave all provided features into the description — do NOT use a bullet list for features inside the description; "
     "write them as flowing sentences. "
     "If MOT advisories are present, mention them honestly but frame them fairly. "
-    "For pricing, remember that UK private buyers always try to barter, so listed prices must be HIGHER than the "
-    "minimum acceptable (target_price) to leave room for negotiation. "
-    "quick_sale: priced to sell within 1–7 days — at or just above break-even, attractive to the first serious viewer. "
-    "balanced: realistic market price, likely to sell in 2–4 weeks with a reasonable profit margin. "
-    "premium: maximum price, patient seller comfortable waiting 4–12 weeks, highest margin. "
+    "For pricing, anchor your strategies to the real market data provided (current AutoTrader asking prices for comparable cars). "
+    "UK private buyers always try to barter, so listed prices must be HIGHER than the minimum acceptable (target_price) "
+    "to leave room for negotiation — typically 5–10% above target. "
+    "quick_sale: priced to sell within 1–7 days — undercut the market median slightly, attractive to the first serious viewer. "
+    "balanced: at or just below the market median, likely to sell in 2–4 weeks with a healthy profit margin. "
+    "premium: above the market median, patient seller comfortable waiting 4–12 weeks, highest margin. "
+    "If no market data is available, use your knowledge of the UK used car market to estimate sensible prices. "
     "estimated_days: provide a plain range string e.g. '1–7 days', '2–4 weeks', '4–12 weeks'. "
-    "rationale: one sentence explaining the strategy and why the listed price is set above target."
+    "rationale: one sentence explaining the strategy and how it relates to the market data."
 )
 
 _LISTING_RESPONSE_SCHEMA = types.Schema(
@@ -328,6 +330,7 @@ def generate_listing(
     total_cost: int,
     features: list[str],
     mot_advisories: str | None,
+    market: dict | None = None,
 ) -> tuple[Optional[dict], int, int]:
     parts = [
         f"Make: {make}",
@@ -349,6 +352,24 @@ def generate_listing(
     else:
         parts.append("Features: None specified")
     parts.append(f"MOT advisories: {mot_advisories.strip() if mot_advisories else 'None'}")
+
+    if market and market.get("count", 0) > 0:
+        parts.append("")
+        parts.append(
+            f"Market data ({market['count']} comparable {make} {model} listings on AutoTrader, last 90 days):"
+        )
+        parts.append(f"  Asking price range: £{market['min_asking']:,} – £{market['max_asking']:,}")
+        parts.append(f"  Median asking price: £{market['median_asking']:,}")
+        parts.append(f"  Mileage-adjusted median (to {mileage:,} miles): £{market['adj_median']:,}")
+        if market.get("samples"):
+            sample_str = ", ".join(
+                f"£{s['price']:,} ({s['mileage']:,}mi)"
+                for s in market["samples"][:6]
+            )
+            parts.append(f"  Sample listings: {sample_str}")
+    else:
+        parts.append("")
+        parts.append("Market data: No comparable listings found in database — use your knowledge of the UK used car market.")
 
     user_content = "Generate a classified car advert for:\n\n" + "\n".join(parts)
     return _call_gemini(

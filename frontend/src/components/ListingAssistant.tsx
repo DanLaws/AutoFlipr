@@ -172,7 +172,7 @@ export default function ListingAssistant({ entry, onClose }: Props) {
     new Set(entry.features ?? [])
   );
   const [motAdvisories, setMotAdvisories] = useState(entry.mot_advisories ?? "");
-  const [result, setResult] = useState<ListingOut | null>(null);
+  const [result, setResult] = useState<ListingOut | null>(entry.listing_output ?? null);
   const [generating, setGenerating] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -301,6 +301,8 @@ export default function ListingAssistant({ entry, onClose }: Props) {
                 </svg>
                 Generating…
               </span>
+            ) : result ? (
+              "Regenerate"
             ) : (
               "Generate listing"
             )}
@@ -364,16 +366,6 @@ export default function ListingAssistant({ entry, onClose }: Props) {
               </p>
             </div>
 
-            {/* Re-generate */}
-            <div className="flex justify-end">
-              <button
-                onClick={generate}
-                disabled={generating}
-                className="btn btn-ghost text-sm"
-              >
-                Regenerate
-              </button>
-            </div>
           </div>
         )}
       </div>

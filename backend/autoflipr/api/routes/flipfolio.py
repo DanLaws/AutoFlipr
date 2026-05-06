@@ -69,6 +69,7 @@ class FlipOut(BaseModel):
     transmission: Optional[str]
     features: Optional[list[str]]
     mot_advisories: Optional[str]
+    listing_output: Optional[dict]
     created_at: datetime
 
 
@@ -190,6 +191,7 @@ def _to_out(entry: FlipEntry) -> FlipOut:
         transmission=entry.transmission,
         features=entry.features,
         mot_advisories=entry.mot_advisories,
+        listing_output=entry.listing_output,
         created_at=entry.created_at,
     )
 
@@ -271,10 +273,15 @@ def generate_listing(entry_id: int, body: GenerateListingIn, user: CurrentUser, 
     except Exception:
         raise HTTPException(status_code=502, detail="Listing generation returned invalid data")
 
-    return ListingOut(
+    result = ListingOut(
         title=parsed.title,
         description=parsed.description,
         quick_sale=PricingStrategyOut(**parsed.pricing.quick_sale.model_dump()),
         balanced=PricingStrategyOut(**parsed.pricing.balanced.model_dump()),
         premium=PricingStrategyOut(**parsed.pricing.premium.model_dump()),
     )
+
+    entry.listing_output = result.model_dump()
+    db.commit()
+
+    return result

@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, apiPost, apiPut, apiDelete, type FlipEntry, type FlipIn } from "../api/client";
+import type { FlipEntry, FlipIn } from "../api/client";
 import FlipModal from "../components/FlipModal";
 import FlipfolioAnalytics from "../components/FlipfolioAnalytics";
 import ListingAssistant from "../components/ListingAssistant";
 import { fmt } from "../utils/formatters";
+import { useFlipfolio } from "../hooks/useFlipfolio";
 
 type SortKey = "profit" | "date_sold";
 type SortDir = "asc" | "desc";
@@ -23,11 +23,7 @@ function sourceLabel(s: string | null) { return s ? (SOURCE_LABELS[s] ?? s) : "�
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function FlipfolioPage() {
-  const qc = useQueryClient();
-  const { data: entries = [], isLoading } = useQuery<FlipEntry[]>({
-    queryKey: ["flipfolio"],
-    queryFn: () => apiFetch("/api/flipfolio"),
-  });
+  const { entries, isLoading, create, update, remove } = useFlipfolio();
 
   const [modal, setModal] = useState<"add" | FlipEntry | null>(null);
   const [listingEntry, setListingEntry] = useState<FlipEntry | null>(null);
@@ -36,21 +32,17 @@ export default function FlipfolioPage() {
   const [sourceFilter, setSourceFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "sold">("all");
 
-  function invalidate() { qc.invalidateQueries({ queryKey: ["flipfolio"] }); }
-
   async function handleSave(data: FlipIn) {
     if (modal === "add") {
-      await apiPost("/api/flipfolio", data);
+      await create(data);
     } else if (modal && typeof modal === "object") {
-      await apiPut(`/api/flipfolio/${modal.id}`, data);
+      await update(modal.id, data);
     }
-    invalidate();
   }
 
   async function handleDelete(id: number) {
     if (!confirm("Delete this flip entry?")) return;
-    await apiDelete(`/api/flipfolio/${id}`);
-    invalidate();
+    await remove(id);
   }
 
   function toggleSort(key: SortKey) {

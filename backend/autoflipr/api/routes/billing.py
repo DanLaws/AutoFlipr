@@ -5,6 +5,8 @@ POST /api/billing/checkout  — create a Stripe Checkout session
 POST /api/billing/portal    — create a customer portal session
 POST /api/billing/webhook   — handle Stripe events (subscription changes)
 """
+import time
+import threading
 import stripe
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, field_validator
@@ -30,6 +32,25 @@ _PLANS: dict[str, dict[str, str]] = {
 }
 
 _PRICE_TO_PLAN: dict[str, str] = {}  # populated lazily from settings
+
+# In-memory dedup for Stripe event IDs — covers the common retry window.
+# Key: event_id, value: processed_at timestamp. TTL = 30 min.
+_PROCESSED_EVENTS: dict[str, float] = {}
+_PROCESSED_EVENTS_LOCK = threading.Lock()
+_EVENT_DEDUP_TTL = 1800  # seconds
+
+
+def _is_duplicate_event(event_id: str) -> bool:
+    now = time.time()
+    with _PROCESSED_EVENTS_LOCK:
+        # Evict stale entries
+        stale = [k for k, t in _PROCESSED_EVENTS.items() if now - t > _EVENT_DEDUP_TTL]
+        for k in stale:
+            del _PROCESSED_EVENTS[k]
+        if event_id in _PROCESSED_EVENTS:
+            return True
+        _PROCESSED_EVENTS[event_id] = now
+        return False
 
 
 def _price_to_plan_map() -> dict[str, str]:
@@ -148,6 +169,9 @@ async def stripe_webhook(request: Request, db: DBSession):
         )
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
+
+    if _is_duplicate_event(event["id"]):
+        return {"status": "ok"}
 
     event_type = event["type"]
 

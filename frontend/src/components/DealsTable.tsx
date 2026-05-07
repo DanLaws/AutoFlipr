@@ -10,19 +10,17 @@ import { useMemo, useState } from "react";
 import type { Deal } from "../api/client";
 import ScoreBadge from "./ScoreBadge";
 import DealModal from "./DealModal";
+import { fmt } from "../utils/formatters";
 
 const col = createColumnHelper<Deal>();
 
-const fmt = {
-  gbp:  (v: number | null) => (v != null ? `£${v.toLocaleString("en-GB")}` : "—"),
-  miles:(v: number | null) => (v != null ? `${v.toLocaleString("en-GB")} mi` : "—"),
-  pct:  (v: number | null) =>
-    v != null ? (
-      <span className={`font-mono font-medium ${v < 0 ? "text-success-strong" : "text-danger-strong"}`}>
-        {v > 0 ? "+" : ""}{v.toFixed(1)}%
-      </span>
-    ) : "—",
-};
+// Deviation cell renders colored JSX — kept local since it returns ReactElement
+const fmtPct = (v: number | null) =>
+  v != null ? (
+    <span className={`font-mono font-medium ${v < 0 ? "text-success-strong" : "text-danger-strong"}`}>
+      {v > 0 ? "+" : ""}{v.toFixed(1)}%
+    </span>
+  ) : "—";
 
 const staticColumns = [
   col.accessor("score", {
@@ -84,7 +82,7 @@ const staticColumns = [
   }),
   col.accessor("price_deviation_pct", {
     header: "vs Market",
-    cell: (i) => fmt.pct(i.getValue()),
+    cell: (i) => fmtPct(i.getValue()),
   }),
   col.accessor("mileage", {
     header: "Mileage",

@@ -7,7 +7,8 @@ POST /api/billing/webhook   — handle Stripe events (subscription changes)
 """
 import stripe
 from fastapi import APIRouter, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from urllib.parse import urlparse
 
 from autoflipr.api.deps import CurrentUser, DBSession
 from autoflipr.api.limiter import limiter
@@ -40,11 +41,27 @@ def _price_to_plan_map() -> dict[str, str]:
     return _PRICE_TO_PLAN
 
 
+def _assert_same_origin(url: str, field: str) -> str:
+    """Reject redirect URLs that point outside the app's own origin."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"{field} must use http or https")
+    allowed_hosts = {"autoflipr.com", "www.autoflipr.com", "localhost", "127.0.0.1"}
+    if parsed.hostname not in allowed_hosts:
+        raise ValueError(f"{field} host '{parsed.hostname}' is not an allowed redirect destination")
+    return url
+
+
 class CheckoutRequest(BaseModel):
     plan: str          # "basic" | "pro"
     interval: str = "monthly"  # "monthly" | "annual"
     success_url: str
     cancel_url: str
+
+    @field_validator("success_url", "cancel_url")
+    @classmethod
+    def validate_redirect_urls(cls, v: str, info) -> str:
+        return _assert_same_origin(v, info.field_name)
 
 
 class CheckoutResponse(BaseModel):

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FlipIn } from "../api/client";
+import { fmt } from "../utils/formatters";
 
 export { type FlipIn };
 
@@ -17,11 +18,6 @@ export function parseNum(s: string): number | null {
   return isNaN(n) ? null : Math.round(n);
 }
 
-function fmt(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return `£${n.toLocaleString("en-GB")}`;
-}
-
 function fmtProfit(n: number | null | undefined): React.ReactElement {
   if (n == null) return <span className="text-text-faint">—</span>;
   const cls = n > 0
@@ -29,7 +25,7 @@ function fmtProfit(n: number | null | undefined): React.ReactElement {
     : n < 0
     ? "text-danger-text font-semibold"
     : "text-text-muted";
-  return <span className={cls}>{n > 0 ? "+" : ""}{fmt(n)}</span>;
+  return <span className={cls}>{n > 0 ? "+" : ""}{fmt.gbp(n)}</span>;
 }
 
 interface FlipModalProps {
@@ -135,7 +131,7 @@ export default function FlipModal({ initial, onClose, onSave }: FlipModalProps) 
           </div>
 
           <div className="flex gap-4 px-3 py-2.5 rounded-lg bg-surface-subtle border border-border-default text-sm">
-            <span className="text-text-muted">Total cost: <strong className="text-text-primary">{fmt(totalCost)}</strong></span>
+            <span className="text-text-muted">Total cost: <strong className="text-text-primary">{fmt.gbp(totalCost)}</strong></span>
             <span className="text-text-muted">Profit: <strong>{fmtProfit(profit)}</strong></span>
           </div>
 

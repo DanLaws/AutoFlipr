@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState, useRef } from "react";
 import type { Deal } from "../api/client";
+import { decodeEntities } from "../utils/decodeEntities";
 import { apiPost } from "../api/client";
 import ScoreBadge from "./ScoreBadge";
 import ReportButton from "./ReportButton";
@@ -158,7 +159,7 @@ function PhotoCarousel({ thumbs, title, onClose }: { thumbs: string[]; title: st
             >
               <img
                 src={url.replace("/w1400/", "/w200/")}
-                alt=""
+                alt={`${title} — photo ${i + 1}`}
                 className="w-full h-full object-cover"
               />
             </button>
@@ -372,7 +373,7 @@ export default function DealModal({ deal, onClose, onHide }: Props) {
             {deal.mot_narrative && (
               <div className="card p-5">
                 <div className="label-caps mb-2">MOT summary</div>
-                <p className="text-sm text-text-secondary leading-relaxed">{deal.mot_narrative}</p>
+                <p className="text-sm text-text-secondary leading-relaxed">{decodeEntities(deal.mot_narrative)}</p>
               </div>
             )}
 
@@ -405,7 +406,7 @@ export default function DealModal({ deal, onClose, onHide }: Props) {
                   </div>
                 )}
 
-                <p className="text-sm text-text-secondary leading-relaxed">{deal.analysis_narrative}</p>
+                <p className="text-sm text-text-secondary leading-relaxed">{decodeEntities(deal.analysis_narrative)}</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Positives */}
@@ -418,7 +419,7 @@ export default function DealModal({ deal, onClose, onHide }: Props) {
                             <svg className="w-3.5 h-3.5 text-success-strong mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
                             </svg>
-                            {p}
+                            {decodeEntities(p)}
                           </li>
                         ))}
                       </ul>
@@ -433,7 +434,7 @@ export default function DealModal({ deal, onClose, onHide }: Props) {
                         {deal.red_flags.map((f, i) => (
                           <li key={i} className="flex gap-2 text-sm text-text-secondary">
                             <span className="text-warning-strong mt-0.5 shrink-0 text-xs">⚠</span>
-                            {f}
+                            {decodeEntities(f)}
                           </li>
                         ))}
                       </ul>
@@ -448,7 +449,7 @@ export default function DealModal({ deal, onClose, onHide }: Props) {
                     <ul className="space-y-1">
                       {deal.condition_notes.map((n, i) => (
                         <li key={i} className="text-sm text-text-secondary flex gap-2">
-                          <span className="text-text-faint mt-0.5">·</span>{n}
+                          <span className="text-text-faint mt-0.5">·</span>{decodeEntities(n)}
                         </li>
                       ))}
                     </ul>

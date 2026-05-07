@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import SEO from "../components/SEO";
 
 interface Props {
   onShowLogin: () => void;
@@ -53,6 +54,12 @@ export default function RegisterPage({ onShowLogin, onSuccess }: Props) {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ background: "var(--color-page)" }}
     >
+      <SEO
+        title="Create Free Account"
+        description="Create your free AutoFlipr account and start finding underpriced used cars across AutoTrader, Gumtree and Facebook Marketplace."
+        canonical="/register"
+        noindex
+      />
       {/* Grid texture — centered radial mask */}
       <div
         className="pointer-events-none fixed inset-0"

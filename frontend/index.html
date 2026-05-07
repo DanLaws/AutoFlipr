@@ -3,10 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AutoFlipr</title>
+
+    <!-- Default title & description (overridden per-page by react-helmet-async) -->
+    <title>AutoFlipr — Find Underpriced Used Cars in the UK</title>
+    <meta
+      name="description"
+      content="AutoFlipr scores every used car on AutoTrader, Gumtree and Facebook Marketplace against real market data. Instantly find underpriced UK used cars worth buying or flipping."
+    />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical (per-page canonical injected by SEO component) -->
+
+    <!-- Open Graph defaults -->
+    <meta property="og:site_name" content="AutoFlipr" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="AutoFlipr — Find Underpriced Used Cars in the UK" />
+    <meta
+      property="og:description"
+      content="AutoFlipr scores every used car on AutoTrader, Gumtree and Facebook Marketplace against real market data. Instantly find underpriced UK used cars worth buying or flipping."
+    />
+    <meta property="og:url" content="https://autoflipr.com/" />
+    <meta property="og:image" content="https://autoflipr.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_GB" />
+
+    <!-- Twitter Card defaults -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AutoFlipr — Find Underpriced Used Cars in the UK" />
+    <meta
+      name="twitter:description"
+      content="AutoFlipr scores every used car on AutoTrader, Gumtree and Facebook Marketplace against real market data. Instantly find underpriced UK used cars worth buying or flipping."
+    />
+    <meta name="twitter:image" content="https://autoflipr.com/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Theme colour for mobile browsers -->
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+    <!-- Preconnect to third-party origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>

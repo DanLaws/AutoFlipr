@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import SEO from "../components/SEO";
 
 interface Props {
   onShowRegister: () => void;
@@ -44,6 +45,12 @@ export default function LoginPage({ onShowRegister, onSuccess }: Props) {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ background: "var(--color-page)" }}
     >
+      <SEO
+        title="Sign In"
+        description="Sign in to your AutoFlipr account to access your deal feed, scan tool, and watchlist."
+        canonical="/login"
+        noindex
+      />
       {/* Grid texture — centered radial mask */}
       <div
         className="pointer-events-none fixed inset-0"

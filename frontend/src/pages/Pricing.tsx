@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import SEO from "../components/SEO";
 
 interface Props {
   onClose?: () => void;
@@ -90,8 +91,80 @@ export default function PricingPage({ onClose }: Props) {
     }
   }
 
+  const pricingSchema = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "AutoFlipr",
+      description:
+        "AI-powered used car deal finder for UK buyers and flippers. Scores every listing across AutoTrader, Gumtree and Facebook Marketplace.",
+      offers: [
+        {
+          "@type": "Offer",
+          name: "Free Plan",
+          description: "Browse the deal feed with up to 5 scans per month.",
+          price: "0",
+          priceCurrency: "GBP",
+          availability: "https://schema.org/InStock",
+        },
+        {
+          "@type": "Offer",
+          name: "Basic Plan",
+          description: "50 scans per month with full AI analysis, scan history, and cost breakdown.",
+          price: "4.99",
+          priceCurrency: "GBP",
+          availability: "https://schema.org/InStock",
+        },
+        {
+          "@type": "Offer",
+          name: "Pro Plan",
+          description: "Unlimited scans plus automated discovery of underpriced deals every 6 hours.",
+          price: "10.99",
+          priceCurrency: "GBP",
+          availability: "https://schema.org/InStock",
+        },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Can I cancel my AutoFlipr subscription at any time?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. AutoFlipr subscriptions can be cancelled at any time with no cancellation fees. Your access continues until the end of the billing period.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Is there a free version of AutoFlipr?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. The Free plan includes up to 5 URL scans per month, full UK cost breakdown, road tax and MOT estimates, and net profit calculation — no credit card required.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What is the difference between Basic and Pro?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Basic gives you 50 scans per month with full analysis and scan history. Pro adds unlimited scans and an automated discovery engine that finds new underpriced deals every 6 hours, including access to the full discovery dashboard.",
+          },
+        },
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen px-4 py-16" style={{ background: "var(--color-page)" }}>
+      <SEO
+        title="Pricing — Find Underpriced Used Cars from £0/mo"
+        description="AutoFlipr plans start free. Basic from £4.99/mo, Pro from £10.99/mo with unlimited scans and auto-discovery across AutoTrader, Gumtree and Facebook Marketplace."
+        canonical="/pricing"
+        schema={pricingSchema}
+      />
       <div className="max-w-4xl mx-auto relative">
         {/* Header */}
         <div className="text-center mb-10">

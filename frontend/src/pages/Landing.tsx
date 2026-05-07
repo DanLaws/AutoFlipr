@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "../hooks/useTheme";
+import SEO from "../components/SEO";
 
 interface Props {
   onLaunch:    () => void;
@@ -83,7 +84,12 @@ function MiniDealCard({ deal, i, onRegister }: { deal: PreviewDeal; i: number; o
     >
       <div className="relative" style={{ aspectRatio: "16 / 10", background: "var(--color-surface-subtle)" }}>
         {deal.image_url ? (
-          <img src={deal.image_url} alt="" className="w-full h-full object-cover" />
+          <img
+            src={deal.image_url}
+            alt={[deal.year, deal.make, deal.model].filter(Boolean).join(" ") || "Used car listing"}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg className="w-8 h-8 text-text-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -209,8 +215,120 @@ export default function LandingPage({ onLaunch, onRegister }: Props) {
     { name: "Pro",   price: "£10.99", period: "/mo",  desc: "Unlimited scans + auto-discovery.",     cta: "Start Pro",        highlight: true  },
   ];
 
+  const SITE_URL = import.meta.env.VITE_SITE_URL ?? "https://autoflipr.com";
+
+  const landingSchema = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "AutoFlipr",
+      url: SITE_URL,
+      description:
+        "AutoFlipr scores every used car listing on AutoTrader, Gumtree and Facebook Marketplace against real market data to surface underpriced UK vehicles.",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${SITE_URL}/?q={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "AutoFlipr",
+      url: SITE_URL,
+      logo: `${SITE_URL}/favicon.svg`,
+      description:
+        "UK-based platform for finding and scoring underpriced used cars across AutoTrader, Gumtree and Facebook Marketplace.",
+      areaServed: "GB",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "AutoFlipr",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url: SITE_URL,
+      description:
+        "AI-powered used car deal finder for the UK. Scores every listing with a Z-score pricing engine and surfaces underpriced vehicles worth buying or flipping.",
+      offers: [
+        {
+          "@type": "Offer",
+          name: "Free Plan",
+          description: "Browse the deal feed with up to 5 scans per month.",
+          price: "0",
+          priceCurrency: "GBP",
+        },
+        {
+          "@type": "Offer",
+          name: "Basic Plan",
+          description: "50 scans per month with full AI analysis and negotiation tips.",
+          price: "4.99",
+          priceCurrency: "GBP",
+        },
+        {
+          "@type": "Offer",
+          name: "Pro Plan",
+          description: "Unlimited scans plus automated discovery of underpriced deals.",
+          price: "10.99",
+          priceCurrency: "GBP",
+        },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "How does AutoFlipr find underpriced used cars?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "AutoFlipr scrapes AutoTrader, Gumtree and Facebook Marketplace daily, then scores every listing against same-spec cars sold in the last 90 days using a statistical Z-score engine. Listings scoring above 70 are flagged as significantly underpriced.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Which platforms does AutoFlipr monitor?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "AutoFlipr monitors AutoTrader for depth of inventory, Gumtree for private sellers, and Facebook Marketplace for rare finds, giving complete coverage of the UK used car market.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What is a good AutoFlipr score?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Scores above 70 indicate a significantly underpriced vehicle worth investigating. Scores between 50 and 70 represent fair market value. Anything below 50 is overpriced relative to comparable sold listings.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Can I scan any car listing URL?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. The AutoFlipr scan tool accepts any AutoTrader, Gumtree or Facebook Marketplace listing URL and returns a Z-score, AI-generated risk flags, estimated margin, and negotiation cap within 30 seconds.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How much does AutoFlipr cost?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "AutoFlipr offers a free tier with 5 scans per month. The Basic plan is £4.99/month for 50 scans with full analysis. The Pro plan is £10.99/month for unlimited scans and automated deal discovery.",
+          },
+        },
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-page text-text-primary">
+      <SEO
+        canonical="/"
+        description="AutoFlipr scores every used car on AutoTrader, Gumtree and Facebook Marketplace against real market data. Find underpriced UK cars worth buying or flipping — free to start."
+        schema={landingSchema}
+      />
 
       {/* ── Navbar ── */}
       <header

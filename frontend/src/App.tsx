@@ -8,6 +8,7 @@ import {
   useLocation,
   Outlet,
 } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { WatchlistProvider, useWatchlistContext } from "./contexts/WatchlistContext";
@@ -25,6 +26,7 @@ import PricingPage    from "./pages/Pricing";
 import AdminUsersPage   from "./pages/AdminUsers";
 import AdminReportsPage from "./pages/AdminReports";
 import FlipfolioPage    from "./pages/Flipfolio";
+import NotFoundPage     from "./pages/NotFound";
 
 // ── Route guards ──────────────────────────────────────────────────────────────
 
@@ -123,7 +125,7 @@ const NAV: NavItem[] = [
   { path: "/admin/users",    label: "Users",    adminOnly: true },
   { path: "/admin/reports",  label: "Reports",  adminOnly: true },
   { path: "/settings",       label: "Settings", adminOnly: true },
-  { path: "/pricing",        label: "Plans" },
+  { path: "/pricing-app",    label: "Plans" },
 ];
 
 function AppShell() {
@@ -137,7 +139,7 @@ function AppShell() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("upgraded") === "1") {
-      navigate("/pricing", { replace: true });
+      navigate("/pricing-app", { replace: true });
     }
   }, [location.search, navigate]);
 
@@ -159,6 +161,11 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-page">
+      {/* Prevent authenticated pages from being indexed */}
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+
       {/* ── Header ── */}
       <header
         className="sticky top-0 z-40 border-b border-border-default"
@@ -298,23 +305,41 @@ function RegisterRoute() {
   );
 }
 
+function PricingRoute() {
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+
+  // Let the AppShell handle pricing for logged-in users (preserves nav bar)
+  if (isLoggedIn) return <Navigate to="/pricing-app" replace />;
+
+  // Public (unauthenticated) pricing page — listen for register intent from the page
+  useEffect(() => {
+    function onRegister() { navigate("/register"); }
+    window.addEventListener("cf:show-register", onRegister);
+    return () => window.removeEventListener("cf:show-register", onRegister);
+  }, [navigate]);
+
+  return <PricingPage onClose={() => navigate("/")} />;
+}
+
 // ── Route tree ────────────────────────────────────────────────────────────────
 
 function AppRoutes() {
   return (
     <Routes>
       {/* Public / redirecting */}
-      <Route path="/"        element={<LandingRoute />} />
-      <Route path="/login"   element={<LoginRoute />} />
+      <Route path="/"         element={<LandingRoute />} />
+      <Route path="/login"    element={<LoginRoute />} />
       <Route path="/register" element={<RegisterRoute />} />
+      <Route path="/pricing"  element={<PricingRoute />} />
 
       {/* Authenticated — inside the shared AppShell layout */}
       <Route element={<AppShell />}>
         {/* Any logged-in user */}
-        <Route path="/scan"       element={<RequireAuth><ScanPage /></RequireAuth>} />
-        <Route path="/watchlist"  element={<RequireAuth><WatchlistPage /></RequireAuth>} />
-        <Route path="/flipfolio"  element={<RequireAuth><FlipfolioPage /></RequireAuth>} />
-        <Route path="/pricing"    element={<RequireAuth><PricingPage onClose={() => history.back()} /></RequireAuth>} />
+        <Route path="/scan"         element={<RequireAuth><ScanPage /></RequireAuth>} />
+        <Route path="/watchlist"    element={<RequireAuth><WatchlistPage /></RequireAuth>} />
+        <Route path="/flipfolio"    element={<RequireAuth><FlipfolioPage /></RequireAuth>} />
+        <Route path="/pricing-app"  element={<RequireAuth><PricingPage onClose={() => history.back()} /></RequireAuth>} />
 
         {/* Pro / admin only */}
         <Route path="/deals" element={
@@ -332,8 +357,8 @@ function AppRoutes() {
         <Route path="/admin/reports" element={<RequireAdmin><AdminReportsPage /></RequireAdmin>} />
       </Route>
 
-      {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all — proper 404 instead of silent redirect */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

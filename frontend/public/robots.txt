@@ -1,0 +1,23 @@
+User-agent: *
+# Allow public-facing pages
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /pricing
+
+# Block private API, admin, and authenticated-only routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /scrapes
+Disallow: /settings
+Disallow: /deals
+Disallow: /scan
+Disallow: /watchlist
+Disallow: /flipfolio
+Disallow: /pricing-app
+
+# Block common duplicate/parameter variants
+Disallow: /*?*upgraded=
+Disallow: /*?*from=
+
+Sitemap: https://autoflipr.com/sitemap.xml

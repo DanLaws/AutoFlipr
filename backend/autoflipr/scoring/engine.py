@@ -4,12 +4,32 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 ALGORITHM_VERSION = "1.0"
-DEPRECIATION_PER_MILE = 0.08  # £ per mile — adjust per segment when data allows
-ASSUMED_FEES_GBP = 300
-MIN_COMPS = 3  # fewer comparables gives no statistical validity; caller receives None
-CONFIDENCE_HIGH = 10
-CONFIDENCE_MEDIUM = 5
-CONFIDENCE_FACTORS = {"high": 1.0, "medium": 0.85, "low": 0.65}
+
+
+@dataclass
+class ScoringConfig:
+    # £ per mile above/below target — empirically derived, revisit per vehicle segment
+    depreciation_per_mile: float = 0.08
+    # Auction/transport/prep overhead assumed for every flip
+    assumed_fees_gbp: int = 300
+    # Below this comparable count the estimate has no statistical validity
+    min_comps: int = 3
+    # Comparable count thresholds for confidence tier assignment
+    confidence_high: int = 10
+    confidence_medium: int = 5
+    # Score multipliers applied after deviation calculation
+    confidence_factors: dict = field(default_factory=lambda: {"high": 1.0, "medium": 0.85, "low": 0.65})
+
+
+DEFAULT_CONFIG = ScoringConfig()
+
+# Module-level aliases for any existing callers that imported these names directly
+DEPRECIATION_PER_MILE = DEFAULT_CONFIG.depreciation_per_mile
+ASSUMED_FEES_GBP = DEFAULT_CONFIG.assumed_fees_gbp
+MIN_COMPS = DEFAULT_CONFIG.min_comps
+CONFIDENCE_HIGH = DEFAULT_CONFIG.confidence_high
+CONFIDENCE_MEDIUM = DEFAULT_CONFIG.confidence_medium
+CONFIDENCE_FACTORS = DEFAULT_CONFIG.confidence_factors
 
 
 @dataclass

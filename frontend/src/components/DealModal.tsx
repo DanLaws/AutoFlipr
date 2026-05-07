@@ -8,18 +8,13 @@ import FlipModal from "./FlipModal";
 import { useSettings } from "../hooks/useSettings";
 import { calcCostBreakdown } from "../utils/costBreakdown";
 import { useWatchlistContext } from "../contexts/WatchlistContext";
+import { fmt } from "../utils/formatters";
 
 interface Props {
   deal: Deal;
   onClose: () => void;
   onHide?: (id: number) => void;
 }
-
-const fmt = {
-  gbp:    (v: number | null) => v != null ? `£${Math.round(v).toLocaleString("en-GB")}` : "—",
-  miles:  (v: number | null) => v != null ? `${v.toLocaleString("en-GB")} mi` : "—",
-  signed: (v: number) => (v >= 0 ? "+" : "−") + "£" + Math.abs(Math.round(v)).toLocaleString("en-GB"),
-};
 
 function useCostBreakdown(deal: Deal) {
   const { settings: s } = useSettings();

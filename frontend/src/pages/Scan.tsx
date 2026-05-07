@@ -5,6 +5,7 @@ import { useWatchlistContext } from "../contexts/WatchlistContext";
 import { apiFetch, apiPost } from "../api/client";
 import ReportButton from "../components/ReportButton";
 import ScoreBadge from "../components/ScoreBadge";
+import { fmt } from "../utils/formatters";
 
 interface ScanResult {
   id: number;
@@ -40,21 +41,16 @@ interface ScanResult {
   condition_notes: string[] | null;
 }
 
-const fmt = {
-  gbp:   (v: number | null) => v != null ? `£${v.toLocaleString("en-GB")}` : "—",
-  miles: (v: number | null) => v != null ? `${v.toLocaleString("en-GB")} mi` : "—",
-  pct:   (v: number | null) => v != null ? `${v > 0 ? "+" : ""}${v.toFixed(1)}%` : "—",
-  signed:(v: number | null) => v != null ? `${v > 0 ? "+" : "−"}£${Math.abs(v).toLocaleString("en-GB")}` : "—",
-  rel:   (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  },
-};
+// Compact relative time for the scan results list (e.g. "2m ago")
+function fmtRel(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 // ── Processing checklist ──────────────────────────────────────────────────────
 
@@ -543,7 +539,7 @@ function HistoryRow({ scan, onSelect, bookmarked }: {
             )}
           </div>
         )}
-        <p className="font-mono text-[10px] text-text-faint">{fmt.rel(scan.scanned_at)}</p>
+        <p className="font-mono text-[10px] text-text-faint">{fmtRel(scan.scanned_at)}</p>
         {scan.listing_id && bookmarked.has(scan.listing_id) && (
           <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"
             className="text-text-muted" aria-label="Saved">

@@ -3,11 +3,7 @@ import type { Deal } from "../api/client";
 import DealModal from "./DealModal";
 import ScoreBadge from "./ScoreBadge";
 import ReportButton from "./ReportButton";
-
-const fmt = {
-  gbp:   (v: number | null) => v != null ? `£${v.toLocaleString("en-GB")}` : "—",
-  miles: (v: number | null) => v != null ? `${v.toLocaleString("en-GB")} mi` : "—",
-};
+import { fmt } from "../utils/formatters";
 
 // ── CardProps ─────────────────────────────────────────────────────────────────
 

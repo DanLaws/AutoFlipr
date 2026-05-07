@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, ListingSummary, ScrapeRunSummary } from "../api/client";
+import { fmt } from "../utils/formatters";
 
 const STATUS_CLS: Record<string, string> = {
   pending: "bg-warning-bg text-warning-text border border-warning-border",
@@ -16,10 +17,6 @@ const RUN_STATUS_CLS: Record<string, string> = {
   running:        "bg-info-bg text-info-text border border-info-border",
 };
 
-function fmt(n: number | null | undefined) {
-  if (n == null) return "—";
-  return n.toLocaleString("en-GB");
-}
 
 export default function ScrapesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -177,9 +174,9 @@ export default function ScrapesPage() {
                       : <span className="text-text-faint font-normal italic text-xs">Not extracted</span>
                     }
                   </td>
-                  <td className="px-4 py-3 font-mono text-text-secondary">{fmt(l.year)}</td>
-                  <td className="px-4 py-3 font-mono font-medium text-text-primary">{l.price_gbp ? `£${fmt(l.price_gbp)}` : "—"}</td>
-                  <td className="px-4 py-3 font-mono text-text-secondary">{l.mileage ? `${fmt(l.mileage)} mi` : "—"}</td>
+                  <td className="px-4 py-3 font-mono text-text-secondary">{l.year ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono font-medium text-text-primary">{fmt.gbp(l.price_gbp)}</td>
+                  <td className="px-4 py-3 font-mono text-text-secondary">{fmt.miles(l.mileage)}</td>
                   <td className="px-4 py-3 text-text-muted">{l.colour ?? "—"}</td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">{l.registration ?? "—"}</td>
                   <td className="px-4 py-3 text-xs text-text-faint">

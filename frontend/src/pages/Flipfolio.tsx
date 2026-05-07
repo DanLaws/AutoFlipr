@@ -4,19 +4,15 @@ import { apiFetch, apiPost, apiPut, apiDelete, type FlipEntry, type FlipIn } fro
 import FlipModal from "../components/FlipModal";
 import FlipfolioAnalytics from "../components/FlipfolioAnalytics";
 import ListingAssistant from "../components/ListingAssistant";
+import { fmt } from "../utils/formatters";
 
 type SortKey = "profit" | "date_sold";
 type SortDir = "asc" | "desc";
 
-function fmt(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return `£${n.toLocaleString("en-GB")}`;
-}
-
 function fmtProfit(n: number | null | undefined): React.ReactElement {
   if (n == null) return <span className="text-text-faint">—</span>;
   const cls = n > 0 ? "text-success-text font-semibold" : n < 0 ? "text-danger-text font-semibold" : "text-text-muted";
-  return <span className={cls}>{n > 0 ? "+" : ""}{fmt(n)}</span>;
+  return <span className={cls}>{n > 0 ? "+" : ""}{fmt.gbp(n)}</span>;
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -163,9 +159,9 @@ export default function FlipfolioPage() {
                       {[e.year, e.make, e.model].filter(Boolean).join(" ")}
                       {e.mileage ? <span className="text-xs text-text-faint ml-1">({e.mileage.toLocaleString()}mi)</span> : null}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">{fmt(e.purchase_price)}</td>
-                    <td className="px-4 py-3 text-text-secondary">{e.sale_price != null ? fmt(e.sale_price) : <span className="text-text-faint">—</span>}</td>
-                    <td className="px-4 py-3 text-text-secondary">{e.additional_costs > 0 ? fmt(e.additional_costs) : <span className="text-text-faint">—</span>}</td>
+                    <td className="px-4 py-3 text-text-secondary">{fmt.gbp(e.purchase_price)}</td>
+                    <td className="px-4 py-3 text-text-secondary">{e.sale_price != null ? fmt.gbp(e.sale_price) : <span className="text-text-faint">—</span>}</td>
+                    <td className="px-4 py-3 text-text-secondary">{e.additional_costs > 0 ? fmt.gbp(e.additional_costs) : <span className="text-text-faint">—</span>}</td>
                     <td className="px-4 py-3">{fmtProfit(e.profit)}</td>
                     <td className="px-4 py-3 text-text-secondary">{e.days_to_sell ?? <span className="text-text-faint">—</span>}</td>
                     <td className="px-4 py-3 text-text-secondary">{sourceLabel(e.source)}</td>

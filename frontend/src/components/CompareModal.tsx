@@ -1,17 +1,12 @@
 import { Fragment, useEffect } from "react";
 import type { Deal } from "../api/client";
 import { decodeEntities } from "../utils/decodeEntities";
+import { fmt } from "../utils/formatters";
 
 interface Props {
   deals: [Deal, Deal];
   onClose: () => void;
 }
-
-const fmt = {
-  gbp:  (v: number | null) => (v != null ? `£${v.toLocaleString("en-GB")}` : "—"),
-  miles:(v: number | null) => (v != null ? `${v.toLocaleString("en-GB")} mi` : "—"),
-  pct:  (v: number | null) => v != null ? `${v > 0 ? "+" : ""}${v.toFixed(1)}%` : "—",
-};
 
 type Winner = 0 | 1 | 2;
 

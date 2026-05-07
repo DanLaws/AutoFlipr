@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 import time
 from typing import Any, Optional
 
@@ -43,6 +44,10 @@ _unavailable_models: list[dict[str, float]] = []
 
 _clients: list[genai.Client] = []
 
+# Protects concurrent reads/writes to _exhausted_models and _unavailable_models
+# across multiple LLM Celery workers sharing this module-level state.
+_model_state_lock = threading.Lock()
+
 
 def _init_clients() -> None:
     keys = settings.gemini_key_list
@@ -68,13 +73,15 @@ def _model_list(key_idx: int) -> list[str]:
     primary = settings.gemini_model
     candidates = [primary] + [m for m in _FALLBACK_MODELS if m != primary]
 
-    # Evict expired entries from both dicts for this key.
-    for store in (_exhausted_models[key_idx], _unavailable_models[key_idx]):
-        expired = [m for m, exp in store.items() if now >= exp]
-        for m in expired:
-            del store[m]
+    with _model_state_lock:
+        # Evict expired entries from both dicts for this key.
+        for store in (_exhausted_models[key_idx], _unavailable_models[key_idx]):
+            expired = [m for m, exp in store.items() if now >= exp]
+            for m in expired:
+                del store[m]
 
-    skip = set(_exhausted_models[key_idx]) | set(_unavailable_models[key_idx])
+        skip = set(_exhausted_models[key_idx]) | set(_unavailable_models[key_idx])
+
     return [m for m in candidates if m not in skip]
 
 _EXTRACTION_RESPONSE_SCHEMA = types.Schema(
@@ -238,7 +245,8 @@ def _call_gemini(
                             time.sleep(15)
                         else:
                             log.warning("Gemini 429 on key=%d %s attempt 2 — suppressing for %ds", key_idx, model_name, _EXHAUSTED_TTL)
-                            _exhausted_models[key_idx][model_name] = time.time() + _EXHAUSTED_TTL
+                            with _model_state_lock:
+                                _exhausted_models[key_idx][model_name] = time.time() + _EXHAUSTED_TTL
                             break
                     else:
                         raise
@@ -248,7 +256,8 @@ def _call_gemini(
                     if exc_code == 503:
                         last_exc = exc
                         log.warning("Gemini 503 on key=%d %s — suppressing for %ds", key_idx, model_name, _UNAVAILABLE_TTL)
-                        _unavailable_models[key_idx][model_name] = time.time() + _UNAVAILABLE_TTL
+                        with _model_state_lock:
+                            _unavailable_models[key_idx][model_name] = time.time() + _UNAVAILABLE_TTL
                         break
                     else:
                         raise

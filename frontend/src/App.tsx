@@ -27,6 +27,7 @@ import AdminUsersPage   from "./pages/AdminUsers";
 import AdminReportsPage from "./pages/AdminReports";
 import FlipfolioPage    from "./pages/Flipfolio";
 import NotFoundPage     from "./pages/NotFound";
+import ErrorBoundary    from "./components/ErrorBoundary";
 
 // ── Route guards ──────────────────────────────────────────────────────────────
 
@@ -334,7 +335,7 @@ function AppRoutes() {
       <Route path="/pricing"  element={<PricingRoute />} />
 
       {/* Authenticated — inside the shared AppShell layout */}
-      <Route element={<AppShell />}>
+      <Route element={<ErrorBoundary><AppShell /></ErrorBoundary>}>
         {/* Any logged-in user */}
         <Route path="/scan"         element={<RequireAuth><ScanPage /></RequireAuth>} />
         <Route path="/watchlist"    element={<RequireAuth><WatchlistPage /></RequireAuth>} />

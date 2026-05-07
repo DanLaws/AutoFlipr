@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from "react";
 import type { Deal } from "../api/client";
+import { decodeEntities } from "../utils/decodeEntities";
 
 interface Props {
   deals: [Deal, Deal];
@@ -72,7 +73,7 @@ function TagList({ items, variant }: { items: string[] | null; variant: "danger"
   return (
     <ul className="space-y-1">
       {items.map((item, i) => (
-        <li key={i} className={`text-xs px-2 py-1 rounded-md ${cls}`}>{item}</li>
+        <li key={i} className={`text-xs px-2 py-1 rounded-md ${cls}`}>{decodeEntities(item)}</li>
       ))}
     </ul>
   );

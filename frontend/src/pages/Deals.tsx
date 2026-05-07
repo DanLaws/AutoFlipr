@@ -228,8 +228,10 @@ export default function DealsPage() {
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-text-muted">
-          {data.length} deal{data.length !== 1 ? "s" : ""} on page {page + 1}
-          {hasNext && <span className="text-text-faint"> — more on next page</span>}
+          {isLoading
+            ? <span className="text-text-faint">Loading…</span>
+            : <>{data.length} deal{data.length !== 1 ? "s" : ""} on page {page + 1}{hasNext && <span className="text-text-faint"> — more on next page</span>}</>
+          }
         </p>
         <div className="flex items-center gap-3">
           {/* Per-page selector */}

@@ -56,5 +56,11 @@ services:
 
 volumes:
   pgdata:
+    external: true
+    name: autoflipr_pgdata
   redisdata:
+    external: true
+    name: autoflipr_redisdata
   playwright_cache:
+    external: true
+    name: autoflipr_playwright_cache

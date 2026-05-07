@@ -26,7 +26,10 @@ import PricingPage    from "./pages/Pricing";
 import AdminUsersPage   from "./pages/AdminUsers";
 import AdminReportsPage from "./pages/AdminReports";
 import FlipfolioPage    from "./pages/Flipfolio";
-import NotFoundPage     from "./pages/NotFound";
+import NotFoundPage       from "./pages/NotFound";
+import TermsPage          from "./pages/Terms";
+import PrivacyPage        from "./pages/Privacy";
+import ForgotPasswordPage from "./pages/ForgotPassword";
 import ErrorBoundary    from "./components/ErrorBoundary";
 
 // ── Route guards ──────────────────────────────────────────────────────────────
@@ -329,10 +332,13 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public / redirecting */}
-      <Route path="/"         element={<LandingRoute />} />
-      <Route path="/login"    element={<LoginRoute />} />
-      <Route path="/register" element={<RegisterRoute />} />
-      <Route path="/pricing"  element={<PricingRoute />} />
+      <Route path="/"                element={<LandingRoute />} />
+      <Route path="/login"           element={<LoginRoute />} />
+      <Route path="/register"        element={<RegisterRoute />} />
+      <Route path="/pricing"         element={<PricingRoute />} />
+      <Route path="/terms"           element={<TermsPage />} />
+      <Route path="/privacy"         element={<PrivacyPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       {/* Authenticated — inside the shared AppShell layout */}
       <Route element={<ErrorBoundary><AppShell /></ErrorBoundary>}>

@@ -110,6 +110,26 @@ export default function LoginPage({ onShowRegister, onSuccess }: Props) {
               </div>
             )}
 
+            <div className="flex justify-end -mt-1">
+              <a href="/forgot-password" className="text-xs text-text-faint hover:text-text-primary transition-colors">
+                Forgot password?
+              </a>
+            </div>
+
+            <div className="flex items-center gap-3 my-1">
+              <div className="flex-1 h-px bg-border-default" />
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  className="w-3.5 h-3.5 rounded accent-current cursor-pointer"
+                />
+                <label htmlFor="remember" className="text-xs text-text-faint cursor-pointer select-none">
+                  Remember me
+                </label>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}

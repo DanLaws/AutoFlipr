@@ -122,7 +122,7 @@ export default function RegisterPage({ onShowLogin, onSuccess }: Props) {
                 onChange={e => setConfirm(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-lg border border-border-default bg-surface text-text-primary text-sm placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-transparent transition-shadow"
                 style={{ "--tw-ring-color": "var(--color-text-primary)" } as React.CSSProperties}
-                placeholder="••••••••"
+                placeholder="Repeat your password"
               />
             </div>
 
@@ -142,7 +142,15 @@ export default function RegisterPage({ onShowLogin, onSuccess }: Props) {
           </form>
 
           <p className="mt-4 text-center text-xs text-text-faint">
-            By signing up you agree to our terms of service.
+            By signing up you agree to our{" "}
+            <a href="/terms" className="underline hover:text-text-primary transition-colors">
+              terms of service
+            </a>
+            {" "}and{" "}
+            <a href="/privacy" className="underline hover:text-text-primary transition-colors">
+              privacy policy
+            </a>
+            .
           </p>
 
           <div className="mt-4 text-center text-sm text-text-muted">

@@ -1,7 +1,9 @@
 """
-User auth endpoints: register, login, me.
+User auth endpoints: register, login, me, forgot-password, reset-password.
 """
-from datetime import datetime, timezone
+import logging
+import secrets
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -10,8 +12,13 @@ from pydantic import BaseModel
 
 from autoflipr.api.deps import DBSession, CurrentUser
 from autoflipr.api.limiter import limiter
+from autoflipr.auth.email import send_password_reset_email
 from autoflipr.auth.utils import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
 from autoflipr.db.models import User
+
+logger = logging.getLogger(__name__)
+
+_RESET_TOKEN_EXPIRE_HOURS = 1
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -39,6 +46,15 @@ class TokenResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 class MeResponse(BaseModel):
@@ -156,3 +172,44 @@ def me(current_user: CurrentUser, db: DBSession):
         is_admin=user.is_admin,
         created_at=user.created_at.isoformat(),
     )
+
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
+def forgot_password(request: Request, body: ForgotPasswordRequest, db: DBSession):
+    """Issue a password-reset token. Always returns 200 to prevent email enumeration."""
+    user = db.query(User).filter(User.email == body.email.lower()).first()
+    if user and user.is_active:
+        token = secrets.token_urlsafe(32)
+        user.reset_token = token
+        user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=_RESET_TOKEN_EXPIRE_HOURS)
+        db.commit()
+        try:
+            send_password_reset_email(user.email, token)
+        except Exception:
+            logger.exception("Password reset email failed for %s", user.email)
+    return {"detail": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
+def reset_password(request: Request, body: ResetPasswordRequest, db: DBSession):
+    """Consume a reset token and set a new password."""
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=422, detail="Password must be at least 8 characters")
+
+    user = db.query(User).filter(User.reset_token == body.token).first()
+    if not user or not user.reset_token_expires:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+
+    if datetime.now(timezone.utc) > user.reset_token_expires:
+        user.reset_token = None
+        user.reset_token_expires = None
+        db.commit()
+        raise HTTPException(status_code=400, detail="Reset link has expired. Please request a new one.")
+
+    user.password_hash = hash_password(body.new_password)
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+    return {"detail": "Password updated successfully."}

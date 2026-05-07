@@ -1,40 +1,22 @@
-import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api, DealsFilter, Deal } from "../api/client";
+import { useState, useMemo } from "react";
+import { type Deal } from "../api/client";
 import DealsGrid from "../components/DealsGrid";
 import FilterDrawer from "../components/FilterDrawer";
 import CompareModal from "../components/CompareModal";
-import { useSettings } from "../hooks/useSettings";
 import { useWatchlistContext } from "../contexts/WatchlistContext";
-
-const PAGE_SIZES = [25, 50] as const;
+import { useDeals, PAGE_SIZES } from "../hooks/useDeals";
 
 export default function DealsPage() {
   const { bookmarked, hidden, toggleBookmark: onBookmark, toggleHide: onHide } = useWatchlistContext();
-  const { settings } = useSettings();
+  const {
+    data, rawData, isLoading, isError, dataUpdatedAt,
+    page, pageSize, hasNext, hasPrev, goToPage, changePageSize,
+    filters, draft, setDraft, apply, setSortBy,
+  } = useDeals();
 
-  const [pageSize, setPageSize] = useState<25 | 50>(25);
-  const [filters, setFilters] = useState<DealsFilter>({ limit: 25, offset: 0 });
-  const [draft, setDraft] = useState<DealsFilter>({ limit: 25, offset: 0 });
-  const [page, setPage] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [comparingIds, setComparingIds] = useState<Set<number>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
-
-  useEffect(() => {
-    if (settings.homePostcode && !draft.home_postcode) {
-      setDraft((d) => ({ ...d, home_postcode: settings.homePostcode }));
-    }
-  }, [settings.homePostcode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const { data: rawData = [], isLoading, isError, dataUpdatedAt } = useQuery({
-    queryKey: ["deals", filters],
-    queryFn: () => api.deals(filters),
-    staleTime: 5 * 60_000,
-    refetchInterval: 5 * 60_000,
-  });
-
-  const data = useMemo(() => rawData.filter((d) => !hidden.has(d.id)), [rawData, hidden]);
 
   const compareDeals = useMemo(() => {
     const ids = [...comparingIds];
@@ -64,27 +46,6 @@ export default function DealsPage() {
     setCompareOpen(false);
   }
 
-  function apply() {
-    setPage(0);
-    setFilters({ ...draft, limit: pageSize, offset: 0 });
-  }
-
-  function goToPage(p: number) {
-    setPage(p);
-    setFilters((f) => ({ ...f, offset: p * pageSize }));
-  }
-
-  function changePageSize(size: 25 | 50) {
-    setPageSize(size);
-    setPage(0);
-    setFilters((f) => ({ ...f, limit: size, offset: 0 }));
-  }
-
-  // Use rawData (before hidden-filter) so that hiding cards on the current page
-  // doesn't incorrectly disable the Next button.
-  const hasNext = rawData.length === pageSize;
-  const hasPrev = page > 0;
-
   return (
     <div className="space-y-6 max-w-screen-2xl mx-auto">
       <div className="flex items-end justify-between gap-4">
@@ -109,7 +70,7 @@ export default function DealsPage() {
         <FilterDrawer
           draft={draft}
           onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-          onApply={() => { setPage(0); setFilters({ ...draft, limit: pageSize, offset: 0 }); }}
+          onApply={() => { apply(); setDrawerOpen(false); }}
           onClose={() => setDrawerOpen(false)}
         />
       )}
@@ -147,9 +108,9 @@ export default function DealsPage() {
         </label>
 
         {[
-          { label: "Min margin (£)",key: "min_margin", w: "w-28", type: "number" },
-          { label: "Make",          key: "make", w: "w-28", type: "text" },
-          { label: "Model",         key: "model", w: "w-28", type: "text" },
+          { label: "Min margin (£)", key: "min_margin", w: "w-28", type: "number" },
+          { label: "Make",           key: "make",       w: "w-28", type: "text" },
+          { label: "Model",          key: "model",      w: "w-28", type: "text" },
         ].map(({ label, key, w, type }) => (
           <label key={key} className="flex flex-col gap-1.5">
             <span className="label-caps">{label}</span>
@@ -234,7 +195,6 @@ export default function DealsPage() {
           }
         </p>
         <div className="flex items-center gap-3">
-          {/* Per-page selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-text-faint">Per page</span>
             <div className="flex rounded-lg border border-border-default overflow-hidden text-xs">
@@ -269,11 +229,7 @@ export default function DealsPage() {
         onCompare={handleCompare}
         sortBy={filters.sort_by ?? "score"}
         homePostcode={draft.home_postcode}
-        onSortChange={(s) => {
-          setDraft((d) => ({ ...d, sort_by: s }));
-          setFilters((f) => ({ ...f, sort_by: s, offset: 0 }));
-          setPage(0);
-        }}
+        onSortChange={setSortBy}
       />
 
       {/* Floating compare bar */}

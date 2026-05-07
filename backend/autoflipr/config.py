@@ -61,6 +61,18 @@ class Settings(BaseSettings):
     stripe_price_pro_monthly: str = ""
     stripe_price_pro_annual: str = ""
 
+    # Email / SMTP (optional — password reset emails)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "noreply@autoflipr.co.uk"
+    app_base_url: str = "https://autoflipr.co.uk"
+
+    @property
+    def smtp_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
+
     # Proxy (optional)
     proxy_url: str = ""
 

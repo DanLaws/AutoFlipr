@@ -4,90 +4,105 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen px-4 py-16" style={{ background: "var(--color-page)" }}>
       <SEO
-        title="Terms of Service"
-        description="AutoFlipr terms of service."
+        title="Terms of Service — AutoFlipr"
+        description="AutoFlipr terms of service. Please read before using the service."
         canonical="/terms"
-        noindex
       />
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight mb-2">Terms of Service</h1>
-        <p className="text-sm text-text-faint mb-10">Last updated: May 2025</p>
+      <div className="max-w-2xl mx-auto prose prose-sm text-text-secondary">
+        <h1 className="text-2xl font-bold text-text-primary mb-2">Terms of Service</h1>
+        <p className="text-xs text-text-muted mb-8">Last updated: 10 May 2026</p>
 
-        <div className="space-y-8 text-sm text-text-secondary leading-relaxed">
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">1. Acceptance of terms</h2>
-            <p>
-              By accessing or using AutoFlipr ("the Service"), you agree to be bound by these Terms of Service. If you do not
-              agree, please do not use the Service.
-            </p>
-          </section>
+        <Section title="1. Acceptance">
+          <p>
+            By creating an account or using AutoFlipr ("<strong>the Service</strong>"), you agree to
+            these Terms. If you do not agree, do not use the Service.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">2. Description of service</h2>
-            <p>
-              AutoFlipr provides tools to help UK users identify potentially underpriced used vehicles listed on third-party
-              marketplaces. Deal scores, margin estimates, and cost breakdowns are indicative only and do not constitute
-              financial advice.
-            </p>
-          </section>
+        <Section title="2. The Service">
+          <p>
+            AutoFlipr aggregates publicly available used-car listings and provides AI-generated
+            analysis to help identify potentially underpriced vehicles. Information provided is for
+            reference only. <strong>We do not guarantee the accuracy of valuations, scores, or
+            recommendations.</strong> Always carry out your own due diligence before purchasing a vehicle.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">3. User accounts</h2>
-            <p>
-              You are responsible for maintaining the confidentiality of your account credentials and for all activity that
-              occurs under your account. You must be at least 18 years old to use the Service.
-            </p>
-          </section>
+        <Section title="3. Accounts">
+          <ul>
+            <li>You must be 18 or older to use the Service.</li>
+            <li>You are responsible for keeping your login credentials secure.</li>
+            <li>You must not share your account with others.</li>
+            <li>We reserve the right to suspend or terminate accounts that violate these Terms.</li>
+          </ul>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">4. Acceptable use</h2>
-            <p>
-              You agree not to misuse the Service, including attempting to circumvent rate limits, scrape data in bulk,
-              reverse-engineer proprietary algorithms, or use the Service for any unlawful purpose.
-            </p>
-          </section>
+        <Section title="4. Subscriptions and billing">
+          <ul>
+            <li>Paid plans are billed in advance on a monthly or annual basis.</li>
+            <li>The Pro plan includes a 1-day free trial. Your card will be charged at the end of the trial unless you cancel.</li>
+            <li>You may cancel at any time. Access continues until the end of the current billing period.</li>
+            <li>Refunds are not provided for partial billing periods.</li>
+            <li>We reserve the right to change pricing with 30 days' notice.</li>
+          </ul>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">5. Disclaimers</h2>
-            <p>
-              The Service is provided "as is" without warranties of any kind. AutoFlipr does not guarantee the accuracy of
-              listings, valuations, or any data sourced from third-party marketplaces. Always conduct your own due diligence
-              before purchasing a vehicle.
-            </p>
-          </section>
+        <Section title="5. Acceptable use">
+          <p>You must not:</p>
+          <ul>
+            <li>Attempt to scrape, copy, or redistribute AutoFlipr data at scale.</li>
+            <li>Use the Service to violate any law or regulation.</li>
+            <li>Attempt to reverse-engineer or interfere with the Service.</li>
+            <li>Submit false or misleading listing reports.</li>
+          </ul>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">6. Limitation of liability</h2>
-            <p>
-              To the fullest extent permitted by law, AutoFlipr Ltd shall not be liable for any indirect, incidental, or
-              consequential damages arising from your use of the Service.
-            </p>
-          </section>
+        <Section title="6. Intellectual property">
+          <p>
+            All content, branding, and software comprising the Service is owned by AutoFlipr. You
+            may not copy or republish it without written permission.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">7. Governing law</h2>
-            <p>
-              These terms are governed by the laws of England and Wales. Any disputes shall be subject to the exclusive
-              jurisdiction of the courts of England and Wales.
-            </p>
-          </section>
+        <Section title="7. Disclaimer of warranties">
+          <p>
+            The Service is provided "<strong>as is</strong>" without warranty of any kind. We do not
+            warrant that the Service will be uninterrupted, error-free, or that deal scores will be
+            accurate. Vehicle valuations are estimates, not professional advice.
+          </p>
+        </Section>
 
-          <section>
-            <h2 className="text-base font-semibold text-text-primary mb-2">8. Contact</h2>
-            <p>
-              Questions about these terms? Email us at{" "}
-              <a href="mailto:legal@autoflipr.co.uk" className="text-text-primary underline hover:no-underline">
-                legal@autoflipr.co.uk
-              </a>
-              .
-            </p>
-          </section>
-        </div>
+        <Section title="8. Limitation of liability">
+          <p>
+            To the fullest extent permitted by law, AutoFlipr's liability for any claim arising from
+            use of the Service is limited to the amount you paid in the 12 months preceding the
+            claim. We are not liable for any indirect, incidental, or consequential damages.
+          </p>
+        </Section>
 
-        <div className="mt-12 pt-6 border-t border-border-default">
-          <a href="/" className="text-sm text-text-muted hover:text-text-primary transition-colors">← Back to AutoFlipr</a>
-        </div>
+        <Section title="9. Governing law">
+          <p>
+            These Terms are governed by the laws of England and Wales. Any disputes shall be subject
+            to the exclusive jurisdiction of the courts of England and Wales.
+          </p>
+        </Section>
+
+        <Section title="10. Changes">
+          <p>
+            We may update these Terms. Continued use of the Service after changes are posted
+            constitutes acceptance of the new Terms.
+          </p>
+        </Section>
       </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-8">
+      <h2 className="text-base font-semibold text-text-primary mb-3">{title}</h2>
+      <div className="space-y-2 text-sm leading-relaxed">{children}</div>
     </div>
   );
 }

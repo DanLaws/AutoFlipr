@@ -14,9 +14,11 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { WatchlistProvider, useWatchlistContext } from "./contexts/WatchlistContext";
 import { useTheme } from "./hooks/useTheme";
 
-import LandingPage    from "./pages/Landing";
-import LoginPage      from "./pages/Login";
-import RegisterPage   from "./pages/Register";
+import LandingPage       from "./pages/Landing";
+import LoginPage         from "./pages/Login";
+import RegisterPage      from "./pages/Register";
+import PrivacyPolicyPage from "./pages/PrivacyPolicy";
+import TermsPage         from "./pages/Terms";
 import DealsPage      from "./pages/Deals";
 import WatchlistPage  from "./pages/Watchlist";
 import ScanPage       from "./pages/Scan";
@@ -332,6 +334,8 @@ function AppRoutes() {
       <Route path="/login"    element={<LoginRoute />} />
       <Route path="/register" element={<RegisterRoute />} />
       <Route path="/pricing"  element={<PricingRoute />} />
+      <Route path="/privacy"  element={<PrivacyPolicyPage />} />
+      <Route path="/terms"    element={<TermsPage />} />
 
       {/* Authenticated — inside the shared AppShell layout */}
       <Route element={<AppShell />}>

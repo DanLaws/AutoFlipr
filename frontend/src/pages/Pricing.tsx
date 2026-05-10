@@ -302,6 +302,11 @@ export default function PricingPage({ onClose }: Props) {
         <p className="mt-8 text-center text-xs text-text-faint">
           Prices in GBP. Cancel anytime. Stripe handles all payments securely.
         </p>
+        <p className="mt-3 text-center text-xs text-text-faint">
+          <a href="/terms"   className="underline hover:text-text-muted transition-colors">Terms of Service</a>
+          {" · "}
+          <a href="/privacy" className="underline hover:text-text-muted transition-colors">Privacy Policy</a>
+        </p>
       </div>
     </div>
   );

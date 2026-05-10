@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "../hooks/useTheme";
 import SEO from "../components/SEO";
 
@@ -65,104 +65,9 @@ function ThemeToggle() {
   );
 }
 
-// ── Gated deal modal ──────────────────────────────────────────────────────────
-
-function GatedDealModal({
-  deal,
-  onRegister,
-  onLogin,
-  onClose,
-}: {
-  deal: PreviewDeal;
-  onRegister: () => void;
-  onLogin: () => void;
-  onClose: () => void;
-}) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const carName = [deal.year, deal.make, deal.model].filter(Boolean).join(" ") || "this car";
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(6px)" }}
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
-    >
-      <div
-        className="relative w-full max-w-sm card p-8 flex flex-col gap-5"
-        style={{ borderColor: "var(--color-text-primary)", borderWidth: 1 }}
-      >
-        {/* Dismiss */}
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-md text-text-faint hover:text-text-primary hover:bg-surface-subtle transition-colors"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M1 1l12 12M13 1L1 13" />
-          </svg>
-        </button>
-
-        {/* Car identity */}
-        <div>
-          <div className="label-caps mb-1">You found a deal</div>
-          <div className="text-lg font-bold text-text-primary leading-tight">{carName}</div>
-          <div className="flex items-baseline gap-2 mt-1">
-            {deal.price_gbp != null && (
-              <span className="font-mono text-base font-bold text-text-primary">
-                £{deal.price_gbp.toLocaleString("en-GB")}
-              </span>
-            )}
-            {deal.estimated_margin_gbp != null && deal.estimated_margin_gbp > 0 && (
-              <span className="font-mono text-sm font-bold text-success-strong">
-                +£{deal.estimated_margin_gbp.toLocaleString("en-GB")} est. margin
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* What's locked */}
-        <div className="rounded-lg bg-surface-subtle border border-border-default p-4 space-y-2">
-          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Unlock with a free account</div>
-          {[
-            "Full AI analysis & red flags",
-            "MOT history & risk summary",
-            "Negotiation cap + opening offer",
-            "Price history & watchlist",
-          ].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-sm text-text-secondary">
-              <svg className="w-3.5 h-3.5 text-score-good shrink-0" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 6l3 3 5-5" />
-              </svg>
-              {item}
-            </div>
-          ))}
-        </div>
-
-        {/* CTAs */}
-        <button onClick={onRegister} className="btn btn-primary w-full">
-          Create free account
-        </button>
-        <div className="text-center text-sm text-text-muted">
-          Already have an account?{" "}
-          <button onClick={onLogin} className="font-semibold text-text-primary hover:underline">
-            Sign in
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Live deals mini-card ──────────────────────────────────────────────────────
 
-function MiniDealCard({ deal, i, onCardClick }: { deal: PreviewDeal; i: number; onCardClick: (deal: PreviewDeal) => void }) {
+function MiniDealCard({ deal, i, onRegister }: { deal: PreviewDeal; i: number; onRegister: () => void }) {
   const score = deal.score;
   const ring  = score >= 70 ? "var(--color-score-good)" : score >= 50 ? "var(--color-score-fair)" : "var(--color-score-poor)";
   const bg    = score >= 70 ? "var(--color-text-primary)" : score >= 50 ? "var(--color-score-fair)" : "var(--color-surface-subtle)";
@@ -174,7 +79,7 @@ function MiniDealCard({ deal, i, onCardClick }: { deal: PreviewDeal; i: number; 
 
   return (
     <div
-      onClick={() => onCardClick(deal)}
+      onClick={onRegister}
       className="card-hover overflow-hidden cursor-pointer"
     >
       <div className="relative" style={{ aspectRatio: "16 / 10", background: "var(--color-surface-subtle)" }}>
@@ -193,8 +98,8 @@ function MiniDealCard({ deal, i, onCardClick }: { deal: PreviewDeal; i: number; 
             </svg>
           </div>
         )}
-        {/* Score ring with tooltip */}
-        <div className="absolute top-2 left-2 group">
+        {/* Score ring */}
+        <div className="absolute top-2 left-2">
           <div style={{ width: size, height: size, position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <svg width={size} height={size} style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
               <circle cx={size/2} cy={size/2} r={r} stroke="var(--color-border)" strokeWidth="2" fill="none" />
@@ -202,15 +107,6 @@ function MiniDealCard({ deal, i, onCardClick }: { deal: PreviewDeal; i: number; 
             </svg>
             <div style={{ width: size - 10, height: size - 10, background: bg, color: fg, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 11 }}>
               {Math.round(score)}
-            </div>
-          </div>
-          {/* Tooltip */}
-          <div className="pointer-events-none absolute left-0 top-full mt-1.5 z-10 hidden group-hover:block">
-            <div className="rounded-md px-2.5 py-1.5 text-[11px] leading-snug text-text-primary font-medium shadow-lg whitespace-nowrap" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-default)" }}>
-              Deal score: {Math.round(score)}/100
-              <div className="text-text-faint font-normal">
-                {score >= 70 ? "Significantly underpriced" : score >= 50 ? "Fair market value" : "Above market price"}
-              </div>
             </div>
           </div>
         </div>
@@ -267,10 +163,9 @@ function HowStep({ n, title, desc }: { n: number; title: string; desc: string })
 
 // ── LiveDeals section ─────────────────────────────────────────────────────────
 
-function LiveDeals({ onRegister, onLogin }: { onRegister: () => void; onLogin: () => void }) {
-  const [deals, setDeals]       = useState<PreviewDeal[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [selected, setSelected] = useState<PreviewDeal | null>(null);
+function LiveDeals({ onRegister }: { onRegister: () => void }) {
+  const [deals, setDeals]   = useState<PreviewDeal[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/deals/preview")
@@ -292,21 +187,11 @@ function LiveDeals({ onRegister, onLogin }: { onRegister: () => void; onLogin: (
   if (!deals.length) return null;
 
   return (
-    <>
-      {selected && (
-        <GatedDealModal
-          deal={selected}
-          onRegister={onRegister}
-          onLogin={onLogin}
-          onClose={() => setSelected(null)}
-        />
-      )}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {deals.map((deal, i) => (
-          <MiniDealCard key={deal.id} deal={deal} i={i} onCardClick={setSelected} />
-        ))}
-      </div>
-    </>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {deals.map((deal, i) => (
+        <MiniDealCard key={deal.id} deal={deal} i={i} onRegister={onRegister} />
+      ))}
+    </div>
   );
 }
 
@@ -496,7 +381,7 @@ export default function LandingPage({ onLaunch, onRegister }: Props) {
           </h1>
 
           <p className="text-lg text-text-secondary max-w-xl mb-8 leading-relaxed">
-            AutoFlipr scrapes AutoTrader, Gumtree and Facebook Marketplace, scores every listing with a Z-score pricing engine, and surfaces the deals worth buying. For buyers, flippers, and traders across the UK.
+            AutoFlipr scrapes AutoTrader, Gumtree and Facebook Marketplace, scores every listing with a Z-score pricing engine, and surfaces the deals worth buying. Built for UK flippers.
           </p>
 
           <div className="flex gap-3 flex-wrap">
@@ -550,7 +435,7 @@ export default function LandingPage({ onLaunch, onRegister }: Props) {
             Open deals feed →
           </button>
         </div>
-        <LiveDeals onRegister={handleRegister} onLogin={onLaunch} />
+        <LiveDeals onRegister={handleRegister} />
         <p className="mt-4 text-center text-xs text-text-faint">
           Sign up to see full analysis, risk flags, MOT history and negotiation tips →
         </p>
@@ -581,40 +466,6 @@ export default function LandingPage({ onLaunch, onRegister }: Props) {
             <HowStep n={2} title="We score against the market" desc="Each listing is compared to same-spec sold cars. Anything <50 is filed; anything >70 is surfaced." />
             <HowStep n={3} title="You buy. Flip. Repeat."   desc="Open the deal, run the AI analysis, use the negotiation cap, drive there. Sell two weeks later." />
           </div>
-        </div>
-      </section>
-
-      {/* ── Social proof ── */}
-      <section className="max-w-6xl mx-auto px-6 pb-20">
-        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
-          {[
-            {
-              quote: "Found a Golf R for £6k under market. Sold it three weeks later for £4.2k profit. AutoFlipr paid for itself in about 45 seconds.",
-              name: "James T.",
-              role: "Car flipper, Manchester",
-            },
-            {
-              quote: "I was spending 3 hours a night on AutoTrader. Now I check AutoFlipr in the morning and I'm done. The negotiation cap is the bit I use most.",
-              name: "Priya S.",
-              role: "Private buyer, London",
-            },
-            {
-              quote: "The AI red flags caught a hidden finance agreement on a BMW I nearly drove 90 miles to view. Worth every penny of the Pro plan.",
-              name: "Dave M.",
-              role: "Part-time trader, Birmingham",
-            },
-          ].map(({ quote, name, role }) => (
-            <div key={name} className="card p-6 flex flex-col gap-4">
-              <svg className="w-5 h-5 text-text-faint shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-              </svg>
-              <p className="text-sm text-text-secondary leading-relaxed flex-1">{quote}</p>
-              <div>
-                <div className="text-sm font-semibold text-text-primary">{name}</div>
-                <div className="text-xs text-text-faint">{role}</div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -693,21 +544,18 @@ export default function LandingPage({ onLaunch, onRegister }: Props) {
                 <button onClick={handleRegister}  className="text-left hover:text-text-primary transition-colors">Register</button>
               </div>
             </div>
+            <div>
+              <div className="label-caps mb-3">Legal</div>
+              <div className="flex flex-col gap-2 text-sm text-text-muted">
+                <a href="/privacy" className="hover:text-text-primary transition-colors">Privacy Policy</a>
+                <a href="/terms"   className="hover:text-text-primary transition-colors">Terms of Service</a>
+              </div>
+            </div>
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-5 border-t border-border-faint flex flex-col sm:flex-row justify-between gap-3 text-xs text-text-faint">
-          <span>© {new Date().getFullYear()} AutoFlipr Ltd — Registered in England &amp; Wales</span>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span>Pricing intelligence powered by Gemini</span>
-            <span>·</span>
-            <span>Not affiliated with listing platforms</span>
-            <span>·</span>
-            <a href="/privacy" className="hover:text-text-primary transition-colors underline">Privacy</a>
-            <span>·</span>
-            <a href="/terms" className="hover:text-text-primary transition-colors underline">Terms</a>
-            <span>·</span>
-            <span>🔒 Stripe · GDPR compliant</span>
-          </div>
+          <span>© {new Date().getFullYear()} AutoFlipr — UK</span>
+          <span>Pricing intelligence powered by Gemini · Not affiliated with listing platforms</span>
         </div>
       </footer>
 

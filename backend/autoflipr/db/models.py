@@ -39,8 +39,6 @@ class User(Base):
     stripe_subscription_id: Mapped[Optional[str]] = mapped_column(Text)
     is_admin: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
-    reset_token: Mapped[Optional[str]] = mapped_column(Text)
-    reset_token_expires: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )
@@ -228,6 +226,22 @@ class FlipEntry(Base):
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
     user: Mapped["User"] = relationship()
+
+
+class UserWatchlist(Base):
+    """Server-side bookmark — one row per (user, listing) pair."""
+    __tablename__ = "user_watchlist"
+    __table_args__ = (
+        UniqueConstraint("user_id", "listing_id", name="uq_watchlist_user_listing"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    listing_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
+    saved_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    user: Mapped["User"] = relationship()
+    listing: Mapped["Listing"] = relationship()
 
 
 class ScrapeRun(Base):

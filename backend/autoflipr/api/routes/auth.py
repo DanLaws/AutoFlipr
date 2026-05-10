@@ -12,9 +12,10 @@ from pydantic import BaseModel
 
 from autoflipr.api.deps import DBSession, CurrentUser
 from autoflipr.api.limiter import limiter
-from autoflipr.auth.email import send_password_reset_email
 from autoflipr.auth.utils import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
+from autoflipr.config import settings
 from autoflipr.db.models import User
+from autoflipr.email import send_password_reset
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +185,9 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: DBSession
         user.reset_token = token
         user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=_RESET_TOKEN_EXPIRE_HOURS)
         db.commit()
+        reset_url = f"{settings.app_url}/reset-password?token={token}"
         try:
-            send_password_reset_email(user.email, token)
+            send_password_reset(user.email, reset_url)
         except Exception:
             logger.exception("Password reset email failed for %s", user.email)
     return {"detail": "If that email is registered, a reset link has been sent."}

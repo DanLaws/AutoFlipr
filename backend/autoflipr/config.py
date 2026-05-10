@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     # Auth — JWT (user-facing)
     jwt_secret: str = "changeme-please-set-JWT_SECRET-in-env"
 
+    # App base URL — used to build links in transactional emails
+    app_url: str = "https://autoflipr.com"
+
+    # Resend transactional email
+    resend_api_key: str = ""
+
     # Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
@@ -60,18 +66,6 @@ class Settings(BaseSettings):
     stripe_price_basic_annual: str = ""
     stripe_price_pro_monthly: str = ""
     stripe_price_pro_annual: str = ""
-
-    # Email / SMTP (optional — password reset emails)
-    smtp_host: str = ""
-    smtp_port: int = 587
-    smtp_user: str = ""
-    smtp_password: str = ""
-    smtp_from: str = "noreply@autoflipr.co.uk"
-    app_base_url: str = "https://autoflipr.co.uk"
-
-    @property
-    def smtp_enabled(self) -> bool:
-        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
 
     # Proxy (optional)
     proxy_url: str = ""

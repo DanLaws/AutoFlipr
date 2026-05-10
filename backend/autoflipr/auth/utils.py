@@ -14,6 +14,7 @@ from autoflipr.config import settings
 _ALGORITHM = "HS256"
 _ACCESS_TOKEN_EXPIRE_MINUTES = 60        # 1 hour
 _REFRESH_TOKEN_EXPIRE_DAYS = 30
+_RESET_TOKEN_EXPIRE_MINUTES = 60
 
 
 def hash_password(password: str) -> str:
@@ -55,6 +56,12 @@ def create_admin_token(username: str) -> str:
     """Short-lived token for admin panel sessions (8 hours)."""
     expire = datetime.now(timezone.utc) + timedelta(hours=8)
     payload = {"sub": username, "type": "admin", "exp": expire}
+    return jwt.encode(payload, settings.jwt_secret, algorithm=_ALGORITHM)
+
+
+def create_reset_token(user_id: int) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=_RESET_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": str(user_id), "type": "reset", "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm=_ALGORITHM)
 
 

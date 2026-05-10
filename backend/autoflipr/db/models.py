@@ -39,6 +39,8 @@ class User(Base):
     stripe_subscription_id: Mapped[Optional[str]] = mapped_column(Text)
     is_admin: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
+    reset_token: Mapped[Optional[str]] = mapped_column(Text)
+    reset_token_expires: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )

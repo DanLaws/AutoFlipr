@@ -26,12 +26,7 @@ import PricingPage    from "./pages/Pricing";
 import AdminUsersPage   from "./pages/AdminUsers";
 import AdminReportsPage from "./pages/AdminReports";
 import FlipfolioPage    from "./pages/Flipfolio";
-import NotFoundPage        from "./pages/NotFound";
-import TermsPage           from "./pages/Terms";
-import PrivacyPage         from "./pages/Privacy";
-import ForgotPasswordPage  from "./pages/ForgotPassword";
-import ResetPasswordPage   from "./pages/ResetPassword";
-import ErrorBoundary    from "./components/ErrorBoundary";
+import NotFoundPage     from "./pages/NotFound";
 
 // ── Route guards ──────────────────────────────────────────────────────────────
 
@@ -134,19 +129,19 @@ const NAV: NavItem[] = [
 ];
 
 function AppShell() {
-  const { user, isLoggedIn, isPro, isAdmin, logout } = useAuth();
+  const { user, isLoggedIn, isPro, isAdmin, logout, refreshMe } = useAuth();
   const { bookmarked } = useWatchlistContext();
   const navigate = useNavigate();
   const location = useLocation();
   useTheme();
 
-  // Handle ?upgraded=1 redirect from Stripe
+  // Handle ?upgraded=1 redirect from Stripe — refresh the JWT so the new plan is reflected immediately
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("upgraded") === "1") {
-      navigate("/pricing-app", { replace: true });
+      refreshMe().finally(() => navigate("/pricing-app", { replace: true }));
     }
-  }, [location.search, navigate]);
+  }, [location.search, navigate, refreshMe]);
 
   // Global events fired by child pages
   useEffect(() => {
@@ -333,17 +328,13 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public / redirecting */}
-      <Route path="/"                element={<LandingRoute />} />
-      <Route path="/login"           element={<LoginRoute />} />
-      <Route path="/register"        element={<RegisterRoute />} />
-      <Route path="/pricing"         element={<PricingRoute />} />
-      <Route path="/terms"           element={<TermsPage />} />
-      <Route path="/privacy"         element={<PrivacyPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password"  element={<ResetPasswordPage />} />
+      <Route path="/"         element={<LandingRoute />} />
+      <Route path="/login"    element={<LoginRoute />} />
+      <Route path="/register" element={<RegisterRoute />} />
+      <Route path="/pricing"  element={<PricingRoute />} />
 
       {/* Authenticated — inside the shared AppShell layout */}
-      <Route element={<ErrorBoundary><AppShell /></ErrorBoundary>}>
+      <Route element={<AppShell />}>
         {/* Any logged-in user */}
         <Route path="/scan"         element={<RequireAuth><ScanPage /></RequireAuth>} />
         <Route path="/watchlist"    element={<RequireAuth><WatchlistPage /></RequireAuth>} />

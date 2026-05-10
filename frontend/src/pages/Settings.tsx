@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useSettings, type AppSettings } from "../hooks/useSettings";
+import { useAuth } from "../contexts/AuthContext";
+import { apiPost } from "../api/client";
 
-type Tab = "discovery" | "costs" | "vehicle";
+type Tab = "discovery" | "costs" | "vehicle" | "billing";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "discovery", label: "Discovery" },
   { id: "costs",     label: "Cost Assumptions" },
   { id: "vehicle",   label: "My Vehicle" },
+  { id: "billing",   label: "Billing" },
 ];
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -220,6 +223,67 @@ function VehicleTab({ s, update }: { s: AppSettings; update: (p: Partial<AppSett
   );
 }
 
+const PLAN_LABELS: Record<string, string> = { free: "Free", basic: "Basic", pro: "Pro" };
+
+function BillingTab() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const plan = user?.plan ?? "free";
+  const isPaid = plan !== "free";
+
+  async function openPortal() {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiPost<{ url: string }>("/api/billing/portal", {
+        return_url: window.location.href,
+      });
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <Section title="Current plan">
+        <Field label="Plan" hint={isPaid ? "Manage your subscription via the Stripe customer portal" : "Upgrade to unlock more scans and auto-discovery"}>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-text-primary">{PLAN_LABELS[plan] ?? plan}</span>
+            {isPaid ? (
+              <button
+                onClick={openPortal}
+                disabled={loading}
+                className="btn btn-secondary btn-sm disabled:opacity-50"
+              >
+                {loading ? "Opening…" : "Manage subscription"}
+              </button>
+            ) : (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("cf:show-pricing"))}
+                className="btn btn-primary btn-sm"
+              >
+                Upgrade
+              </button>
+            )}
+          </div>
+        </Field>
+      </Section>
+      {error && (
+        <div className="rounded-lg bg-danger-bg border border-danger-border px-4 py-3 text-sm text-danger-strong">
+          {error}
+        </div>
+      )}
+      <p className="text-xs text-text-faint text-center mt-4">
+        Payments are handled securely by Stripe. AutoFlipr never stores your card details.
+      </p>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("discovery");
   const { settings, update, reset } = useSettings();
@@ -255,6 +319,7 @@ export default function SettingsPage() {
         {tab === "discovery" && <DiscoveryTab s={settings} update={update} />}
         {tab === "costs"     && <CostsTab     s={settings} update={update} />}
         {tab === "vehicle"   && <VehicleTab   s={settings} update={update} />}
+        {tab === "billing"   && <BillingTab />}
       </div>
     </div>
   );

@@ -22,8 +22,6 @@ from autoflipr.api.routes.billing import router as billing_router
 from autoflipr.api.routes.admin import router as admin_router
 from autoflipr.api.routes.scan import router as scan_router
 from autoflipr.api.routes.flipfolio import router as flipfolio_router
-from autoflipr.api.routes.proxy import router as proxy_router
-from autoflipr.api.routes.appraise import router as appraise_router
 from autoflipr.api.routes.watchlist import router as watchlist_router
 from autoflipr.config import settings
 
@@ -69,6 +67,4 @@ app.include_router(billing_router)
 app.include_router(admin_router)
 app.include_router(scan_router)
 app.include_router(flipfolio_router)
-app.include_router(proxy_router)
-app.include_router(appraise_router)
 app.include_router(watchlist_router)

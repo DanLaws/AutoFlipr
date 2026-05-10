@@ -21,6 +21,7 @@ const TIERS = [
       "Net profit calculation",
     ],
     cta: "Get started for free",
+    trial: null,
     highlight: false,
   },
   {
@@ -35,6 +36,7 @@ const TIERS = [
       "Everything in Free",
     ],
     cta: "Subscribe",
+    trial: null,
     highlight: false,
   },
   {
@@ -49,7 +51,8 @@ const TIERS = [
       "Scan history & saved analyses",
       "Everything in Basic",
     ],
-    cta: "Subscribe",
+    cta: "Start free trial",
+    trial: "1-day free trial — cancel anytime",
     highlight: true,
   },
 ] as const;
@@ -276,15 +279,20 @@ export default function PricingPage({ onClose }: Props) {
                     {isLoggedIn ? "Continue with Free" : tier.cta}
                   </button>
                 ) : (
-                  <button
-                    onClick={() => handleSubscribe(tier.id)}
-                    disabled={!!loading}
-                    className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-                      tier.highlight ? "btn btn-primary" : "btn btn-secondary"
-                    }`}
-                  >
-                    {isLoadingThis ? "Redirecting…" : tier.cta}
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleSubscribe(tier.id)}
+                      disabled={!!loading}
+                      className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                        tier.highlight ? "btn btn-primary" : "btn btn-secondary"
+                      }`}
+                    >
+                      {isLoadingThis ? "Redirecting…" : tier.cta}
+                    </button>
+                    {tier.trial && (
+                      <p className="text-center text-xs text-text-faint">{tier.trial}</p>
+                    )}
+                  </div>
                 )}
               </div>
             );

@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # Auth — JWT (user-facing)
     jwt_secret: str = "changeme-please-set-JWT_SECRET-in-env"
 
+    # Enable Swagger UI / ReDoc / OpenAPI schema — off in production
+    debug: bool = False
+
     # App base URL — used to build links in transactional emails
     app_url: str = "https://autoflipr.com"
 
@@ -99,6 +102,10 @@ class Settings(BaseSettings):
         if self.auth_pass in _INSECURE_DEFAULTS:
             raise ValueError(
                 "AUTH_PASS is set to an insecure default — set it in your .env file"
+            )
+        if "changeme" in self.database_url:
+            raise ValueError(
+                "DATABASE_URL contains an insecure default password — set a strong password in your .env file"
             )
         return self
 

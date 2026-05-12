@@ -71,6 +71,11 @@ class CheckoutResponse(BaseModel):
 class PortalRequest(BaseModel):
     return_url: str
 
+    @field_validator("return_url")
+    @classmethod
+    def validate_return_url(cls, v: str) -> str:
+        return _assert_same_origin(v, "return_url")
+
 
 @router.post("/checkout", response_model=CheckoutResponse)
 @limiter.limit("10/minute")

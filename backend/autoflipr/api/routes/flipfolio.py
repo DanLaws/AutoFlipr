@@ -2,11 +2,12 @@ import statistics
 from datetime import date, datetime, timezone, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, field_validator
 from sqlalchemy import and_, func
 
 from autoflipr.api.deps import DBSession, CurrentUser
+from autoflipr.api.limiter import limiter
 from autoflipr.db.models import FlipEntry, Listing
 from autoflipr.llm import gemini_client
 from autoflipr.llm.schemas import ListingOutput
@@ -197,7 +198,8 @@ def _to_out(entry: FlipEntry) -> FlipOut:
 
 
 @router.get("", response_model=list[FlipOut])
-def list_flips(user: CurrentUser, db: DBSession) -> list[FlipOut]:
+@limiter.limit("30/minute")
+def list_flips(request: Request, user: CurrentUser, db: DBSession) -> list[FlipOut]:
     entries = (
         db.query(FlipEntry)
         .filter(FlipEntry.user_id == user["id"])
@@ -208,7 +210,8 @@ def list_flips(user: CurrentUser, db: DBSession) -> list[FlipOut]:
 
 
 @router.post("", response_model=FlipOut, status_code=status.HTTP_201_CREATED)
-def create_flip(body: FlipIn, user: CurrentUser, db: DBSession) -> FlipOut:
+@limiter.limit("20/minute")
+def create_flip(request: Request, body: FlipIn, user: CurrentUser, db: DBSession) -> FlipOut:
     entry = FlipEntry(user_id=user["id"], **body.model_dump())
     db.add(entry)
     db.commit()
@@ -217,7 +220,8 @@ def create_flip(body: FlipIn, user: CurrentUser, db: DBSession) -> FlipOut:
 
 
 @router.put("/{entry_id}", response_model=FlipOut)
-def update_flip(entry_id: int, body: FlipIn, user: CurrentUser, db: DBSession) -> FlipOut:
+@limiter.limit("20/minute")
+def update_flip(request: Request, entry_id: int, body: FlipIn, user: CurrentUser, db: DBSession) -> FlipOut:
     entry = db.get(FlipEntry, entry_id)
     if not entry or entry.user_id != user["id"]:
         raise HTTPException(status_code=404, detail="Not found")
@@ -229,7 +233,8 @@ def update_flip(entry_id: int, body: FlipIn, user: CurrentUser, db: DBSession) -
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_flip(entry_id: int, user: CurrentUser, db: DBSession) -> None:
+@limiter.limit("20/minute")
+def delete_flip(request: Request, entry_id: int, user: CurrentUser, db: DBSession) -> None:
     entry = db.get(FlipEntry, entry_id)
     if not entry or entry.user_id != user["id"]:
         raise HTTPException(status_code=404, detail="Not found")
@@ -238,7 +243,8 @@ def delete_flip(entry_id: int, user: CurrentUser, db: DBSession) -> None:
 
 
 @router.post("/{entry_id}/generate-listing", response_model=ListingOut)
-def generate_listing(entry_id: int, body: GenerateListingIn, user: CurrentUser, db: DBSession) -> ListingOut:
+@limiter.limit("10/minute")
+def generate_listing(request: Request, entry_id: int, body: GenerateListingIn, user: CurrentUser, db: DBSession) -> ListingOut:
     entry = db.get(FlipEntry, entry_id)
     if not entry or entry.user_id != user["id"]:
         raise HTTPException(status_code=404, detail="Not found")

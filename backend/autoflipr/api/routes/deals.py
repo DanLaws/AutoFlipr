@@ -1,12 +1,13 @@
 from functools import lru_cache
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import asc, desc, func, nullslast
 from sqlalchemy.orm import joinedload
 
 from autoflipr.api.deps import DBSession, ProUser, CurrentUser
+from autoflipr.api.limiter import limiter
 from autoflipr.db.models import Listing, DealScore, LLMInsight, ListingReport, PriceHistory
 from autoflipr.geo import geocode_uk_location, haversine_miles
 
@@ -61,7 +62,8 @@ class PreviewDeal(BaseModel):
 
 
 @router.get("/preview", response_model=list[PreviewDeal])
-def preview_deals(db: DBSession) -> list[PreviewDeal]:
+@limiter.limit("30/minute")
+def preview_deals(request: Request, db: DBSession) -> list[PreviewDeal]:
     """Public endpoint — top scored listings for the landing page."""
     latest_score_sq = (
         db.query(
@@ -146,7 +148,9 @@ class DealResponse(BaseModel):
 
 
 @router.get("", response_model=list[DealResponse])
+@limiter.limit("60/minute")
 def list_deals(
+    request: Request,
     db: DBSession,
     user: ProUser,
     min_score: float = Query(0, ge=0, le=100),
@@ -403,7 +407,9 @@ def list_deals(
 
 
 @router.get("/by-ids", response_model=list[DealResponse])
+@limiter.limit("30/minute")
 def deals_by_ids(
+    request: Request,
     db: DBSession,
     user: CurrentUser,
     ids: str = Query(..., description="Comma-separated listing IDs"),

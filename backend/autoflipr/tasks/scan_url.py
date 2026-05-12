@@ -34,12 +34,27 @@ log = logging.getLogger(__name__)
 # ── URL helpers ───────────────────────────────────────────────────────────────
 
 def detect_source(url: str) -> Optional[str]:
-    if "autotrader.co.uk" in url:
+    """Return the source name for a supported listing URL, or None if not recognised.
+
+    Uses proper hostname parsing so that URLs like
+    https://evil.com/?ref=autotrader.co.uk cannot spoof the allowed-source check.
+    """
+    from urllib.parse import urlparse
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return None
+        host = (parsed.hostname or "").lower()
+    except Exception:
+        return None
+
+    if host in ("www.autotrader.co.uk", "autotrader.co.uk"):
         return "autotrader"
-    if "gumtree.com" in url:
+    if host in ("www.gumtree.com", "gumtree.com"):
         return "gumtree"
-    if "facebook.com/marketplace" in url:
-        return "fb"
+    if host in ("www.facebook.com", "facebook.com", "m.facebook.com"):
+        if "/marketplace/" in parsed.path:
+            return "fb"
     return None
 
 

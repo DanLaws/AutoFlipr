@@ -12,8 +12,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-# Install Playwright browsers (needed only in worker-scrape; harmless elsewhere)
-RUN uv run playwright install chromium --with-deps
+# Install Playwright browsers + Scrapling stealth browser
+RUN uv run playwright install chromium --with-deps && \
+    uv run scrapling install
 
 COPY . .
 
